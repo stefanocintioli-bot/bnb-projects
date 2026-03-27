@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>BNB Chain Onboarding | Guía de Inicio</title>
+<style>
+  :root {
+    --bnb-yellow: #F0B90B;
+    --bnb-yellow-dark: #C99A09;
+    --bnb-yellow-light: #FDF3CC;
+    --bnb-dark: #1A1A2E;
+    --bnb-darker: #12121F;
+    --bnb-card: #1E1E35;
+    --bnb-border: #2E2E4E;
+    --text-primary: #F5F5F5;
+    --text-muted: #9999BB;
+    --success: #23C55E;
+    --success-bg: #0D2B1A;
+    --link-blue: #60A5FA;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bnb-darker);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Header ── */
+  header {
+    width: 100%;
+    background: var(--bnb-dark);
+    border-bottom: 2px solid var(--bnb-yellow);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .bnb-logo {
+    width: 36px;
+    height: 36px;
+    background: var(--bnb-yellow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 15px;
+    color: var(--bnb-dark);
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .header-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Language toggle */
+  .lang-toggle {
+    display: flex;
+    background: var(--bnb-border);
+    border-radius: 20px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .lang-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lang-btn.active {
+    background: var(--bnb-yellow);
+    color: var(--bnb-dark);
+    border-radius: 20px;
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    width: 100%;
+    max-width: 640px;
+    padding: 16px 20px 0;
+  }
+  .progress-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .step-dot-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--bnb-border);
+    background: var(--bnb-card);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    position: relative;
+    z-index: 1;
+  }
+  .step-dot.active {
+    border-color: var(--bnb-yellow);
+    background: var(--bnb-yellow);
+    color: var(--bnb-dark);
+    box-shadow: 0 0 12px rgba(240,185,11,0.4);
+  }
+  .step-dot.done {
+    border-color: var(--success);
+    background: var(--success);
+    color: #fff;
+  }
+  .step-dot.done::after {
+    content: '✓';
+    font-size: 13px;
+  }
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--bnb-border);
+    margin-top: -18px;
+    transition: background 0.3s;
+  }
+  .step-line.done {
+    background: var(--success);
+  }
+  .step-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 60px;
+    line-height: 1.2;
+  }
+  .step-label.active { color: var(--bnb-yellow); font-weight: 600; }
+  .step-label.done { color: var(--success); }
+
+  /* ── Chat area ── */
+  .chat-area {
+    width: 100%;
+    max-width: 640px;
+    flex: 1;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  /* Message bubbles */
+  .msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .bot-avatar {
+    width: 36px;
+    height: 36px;
+    background: var(--bnb-yellow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .bubble {
+    background: var(--bnb-card);
+    border: 1px solid var(--bnb-border);
+    border-radius: 4px 16px 16px 16px;
+    padding: 14px 16px;
+    max-width: calc(100% - 50px);
+    line-height: 1.6;
+    font-size: 14.5px;
+  }
+
+  .bubble.user {
+    background: var(--bnb-yellow);
+    color: var(--bnb-dark);
+    border-radius: 16px 4px 16px 16px;
+    margin-left: auto;
+    font-weight: 600;
+    border-color: var(--bnb-yellow-dark);
+  }
+
+  .bubble h3 {
+    font-size: 16px;
+    color: var(--bnb-yellow);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bubble p { margin-bottom: 8px; }
+  .bubble p:last-child { margin-bottom: 0; }
+
+  .bubble ul {
+    margin: 8px 0 8px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .bubble li { color: var(--text-primary); }
+
+  .highlight-box {
+    background: rgba(240,185,11,0.08);
+    border-left: 3px solid var(--bnb-yellow);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 13.5px;
+  }
+
+  .info-box {
+    background: rgba(96,165,250,0.08);
+    border: 1px solid rgba(96,165,250,0.25);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: #A5C4FF;
+  }
+
+  .success-box {
+    background: var(--success-bg);
+    border: 1px solid var(--success);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 10px 0;
+    font-size: 13.5px;
+    color: #6EE7A0;
+  }
+
+  /* ── Action buttons ── */
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 16px 20px;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: var(--bnb-yellow);
+    color: var(--bnb-dark);
+  }
+  .btn-primary:hover { background: var(--bnb-yellow-dark); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: var(--bnb-card);
+    color: var(--text-primary);
+    border: 1.5px solid var(--bnb-border);
+  }
+  .btn-secondary:hover { border-color: var(--bnb-yellow); color: var(--bnb-yellow); }
+
+  .btn-link {
+    background: rgba(96,165,250,0.1);
+    color: var(--link-blue);
+    border: 1.5px solid rgba(96,165,250,0.3);
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .btn-link:hover { background: rgba(96,165,250,0.2); }
+
+  .btn-success {
+    background: var(--success);
+    color: #fff;
+  }
+  .btn-success:hover { background: #1DAF52; }
+
+  /* Typing indicator */
+  .typing {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .typing-dots {
+    background: var(--bnb-card);
+    border: 1px solid var(--bnb-border);
+    border-radius: 4px 16px 16px 16px;
+    padding: 14px 20px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    background: var(--bnb-yellow);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Completion screen */
+  .completion {
+    text-align: center;
+    padding: 20px;
+  }
+  .completion-icon {
+    font-size: 60px;
+    margin-bottom: 12px;
+  }
+  .completion h2 {
+    font-size: 22px;
+    color: var(--bnb-yellow);
+    margin-bottom: 8px;
+  }
+  .completion p {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  /* Welcome screen overlay */
+  #welcome-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bnb-darker);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    z-index: 200;
+    text-align: center;
+  }
+
+  .welcome-logo {
+    width: 80px;
+    height: 80px;
+    background: var(--bnb-yellow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--bnb-dark);
+    margin-bottom: 20px;
+    box-shadow: 0 0 40px rgba(240,185,11,0.3);
+  }
+
+  #welcome-screen h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  #welcome-screen p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+
+  .welcome-lang-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .welcome-lang-btns {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .welcome-lang-btn {
+    flex: 1;
+    max-width: 140px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 2px solid var(--bnb-border);
+    background: var(--bnb-card);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .welcome-lang-btn:hover, .welcome-lang-btn.selected {
+    border-color: var(--bnb-yellow);
+    background: rgba(240,185,11,0.1);
+    color: var(--bnb-yellow);
+  }
+  .welcome-lang-btn .flag { font-size: 28px; }
+
+  .welcome-start-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 16px;
+    background: var(--bnb-yellow);
+    color: var(--bnb-dark);
+    border: none;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .welcome-start-btn.ready {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .welcome-start-btn.ready:hover {
+    background: var(--bnb-yellow-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(240,185,11,0.25);
+  }
+
+  .hidden { display: none !important; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bnb-border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══ WELCOME SCREEN ══ -->
+<div id="welcome-screen">
+  <div class="welcome-logo">B</div>
+  <h1 id="welcome-title">BNB Chain<br>Onboarding Guide</h1>
+  <p id="welcome-desc">Your step-by-step guide to get started on BNB Chain testnet. No experience needed.</p>
+  <div class="welcome-lang-label" id="welcome-lang-label">Choose your language / Elige tu idioma</div>
+  <div class="welcome-lang-btns">
+    <button class="welcome-lang-btn" onclick="selectLang('en')" id="btn-en">
+      <span class="flag">🇺🇸</span>
+      English
+    </button>
+    <button class="welcome-lang-btn" onclick="selectLang('es')" id="btn-es">
+      <span class="flag">🇪🇸</span>
+      Español
+    </button>
+  </div>
+  <button class="welcome-start-btn" id="start-btn" onclick="startOnboarding()">
+    Let's Go →
+  </button>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<header>
+  <div class="header-brand">
+    <div class="bnb-logo">B</div>
+    <div>
+      <div class="header-title">BNB Chain Guide</div>
+      <div class="header-subtitle" id="header-subtitle">Testnet Onboarding</div>
+    </div>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn" id="lang-en" onclick="switchLang('en')">EN</button>
+    <button class="lang-btn" id="lang-es" onclick="switchLang('es')">ES</button>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-steps" id="progress-steps"></div>
+</div>
+
+<div class="chat-area" id="chat-area"></div>
+
+<div class="actions" id="actions"></div>
+
+<script>
+// ══════════════════════════════════════
+//  CONTENT DATA
+// ══════════════════════════════════════
+const content = {
+  en: {
+    stepLabels: ['Faucet', 'Swap', 'Explorer', 'Gas'],
+    steps: [
+      {
+        icon: '🚰',
+        title: 'Step 1: Get Free Testnet BNB',
+        messages: [
+          {
+            text: `<h3>🚰 Get Free Testnet BNB</h3>
+<p>First things first — you need <strong>testnet BNB</strong> to practice. This is <em>fake money</em> on the test network, so you can experiment without any real risk.</p>
+<div class="highlight-box">
+  💡 <strong>Testnet</strong> = a practice environment where everything works exactly like the real blockchain, but tokens have no real value.
+</div>
+<p><strong>Here's what to do:</strong></p>
+<ul>
+  <li>Open the faucet link below in your browser</li>
+  <li>Connect your MetaMask wallet (make sure you're on BSC Testnet)</li>
+  <li>Click "Give Me BNB" — you'll receive 0.1 tBNB</li>
+  <li>Wait ~30 seconds and check your wallet balance</li>
+</ul>
+<div class="info-box">
+  ℹ️ Don't have MetaMask? Install it first from <strong>metamask.io</strong> and add the BSC Testnet network (Chain ID: 97).
+</div>`
+          }
+        ],
+        link: { url: 'https://testnet.bnbchain.org/faucet-smart', label: '🔗 Open BNB Testnet Faucet' },
+        confirm: "✅ I got my testnet BNB!",
+        confirmMsg: `<div class="success-box">✅ <strong>Excellent!</strong> You now have testnet BNB in your wallet. You're ready for your first swap!</div>`
+      },
+      {
+        icon: '🔄',
+        title: 'Step 2: Make Your First Swap',
+        messages: [
+          {
+            text: `<h3>🔄 Your First Swap on PancakeSwap</h3>
+<p>Now let's do a <strong>token swap</strong> — this means exchanging one token for another. We'll use <strong>PancakeSwap</strong>, the biggest DEX on BNB Chain.</p>
+<div class="highlight-box">
+  💡 <strong>DEX</strong> (Decentralized Exchange) = a place to trade tokens directly from your wallet, with no sign-up or account needed.
+</div>
+<p><strong>Steps to follow:</strong></p>
+<ul>
+  <li>Open PancakeSwap using the link below</li>
+  <li>Connect your MetaMask wallet</li>
+  <li>Make sure your wallet is set to <strong>BSC Testnet</strong> (Chain ID: 97)</li>
+  <li>In the "From" field select <strong>BNB</strong></li>
+  <li>In the "To" field select <strong>BUSD</strong> or any test token</li>
+  <li>Enter a small amount (e.g. 0.01 BNB) and click <strong>Swap</strong></li>
+  <li>Confirm the transaction in MetaMask</li>
+</ul>
+<div class="info-box">
+  ℹ️ You'll see a small network fee (gas). This is normal — we'll explain this in Step 4!
+</div>`
+          }
+        ],
+        link: { url: 'https://pancakeswap.finance/swap', label: '🥞 Open PancakeSwap' },
+        confirm: "✅ I made my first swap!",
+        confirmMsg: `<div class="success-box">✅ <strong>You just made your first DeFi swap!</strong> This is a huge milestone. Now let's see that transaction on the blockchain explorer.</div>`
+      },
+      {
+        icon: '🔍',
+        title: 'Step 3: Read Your Transaction',
+        messages: [
+          {
+            text: `<h3>🔍 Find Your Transaction on BscScan</h3>
+<p><strong>BscScan</strong> is like a "Google" for the BNB Chain — it shows every transaction, wallet, and smart contract in real time. Completely public and transparent.</p>
+<div class="highlight-box">
+  💡 Every transaction on the blockchain has a unique ID called a <strong>Transaction Hash (TxHash)</strong> — like a receipt you can always look up.
+</div>
+<p><strong>How to find your swap transaction:</strong></p>
+<ul>
+  <li>Open BscScan Testnet using the link below</li>
+  <li>Copy your wallet address from MetaMask</li>
+  <li>Paste it in the BscScan search bar and press Enter</li>
+  <li>You'll see your wallet's full transaction history</li>
+  <li>Click on your recent swap to see all the details</li>
+</ul>
+<div class="info-box">
+  ℹ️ Look for these fields on the transaction page:<br>
+  • <strong>Status:</strong> Success ✅ or Failed ❌<br>
+  • <strong>Block:</strong> which block it was included in<br>
+  • <strong>Gas Used:</strong> how much you paid for computation
+</div>`
+          }
+        ],
+        link: { url: 'https://testnet.bscscan.com', label: '🔍 Open BscScan Testnet' },
+        confirm: "✅ I found my transaction!",
+        confirmMsg: `<div class="success-box">✅ <strong>You can now read the blockchain!</strong> This transparency is one of crypto's superpowers — anyone can verify any transaction, anytime.</div>`
+      },
+      {
+        icon: '⛽',
+        title: 'Step 4: Understand Gas Fees',
+        messages: [
+          {
+            text: `<h3>⛽ What Are Gas Fees?</h3>
+<p>You've seen "gas fees" mentioned — let's demystify them once and for all.</p>
+<div class="highlight-box">
+  ⛽ <strong>Gas</strong> = the fee you pay to the network so it processes your transaction. Think of it like a delivery charge for your transaction.
+</div>
+<p><strong>The simple formula:</strong></p>
+<ul>
+  <li><strong>Gas Fee</strong> = Gas Used × Gas Price (in Gwei)</li>
+  <li><strong>Gwei</strong> = a tiny fraction of BNB (1 BNB = 1,000,000,000 Gwei)</li>
+  <li>On BNB Chain, gas is usually very cheap (~1–5 Gwei)</li>
+</ul>
+<div class="highlight-box">
+  🌎 <strong>Real-world analogy:</strong> Imagine you want to send a letter. The "gas" is the postage stamp. A heavier letter (complex transaction) needs more stamps (more gas). BNB Chain stamps are very cheap — typically less than $0.01!
+</div>
+<p><strong>Tips to manage gas fees:</strong></p>
+<ul>
+  <li>Simple transfers = less gas</li>
+  <li>Complex smart contract calls = more gas</li>
+  <li>BNB Chain fees are much cheaper than Ethereum</li>
+  <li>MetaMask shows the estimated fee before you confirm</li>
+</ul>
+<div class="info-box">
+  ℹ️ Gas fees on BNB Chain are paid in BNB — always keep a small amount of BNB in your wallet to cover fees.
+</div>`
+          }
+        ],
+        link: null,
+        confirm: "✅ I understand gas fees!",
+        confirmMsg: `<div class="success-box">🎉 <strong>You've completed all 4 steps!</strong> You're officially ready to explore BNB Chain!</div>`
+      }
+    ],
+    completion: {
+      icon: '🎉',
+      title: 'Congratulations!',
+      body: `You've completed the BNB Chain Testnet Onboarding! Here's what you learned:`,
+      achievements: [
+        '🚰 Got free testnet BNB from the faucet',
+        '🔄 Made your first swap on PancakeSwap',
+        '🔍 Read your transaction on BscScan',
+        '⛽ Understood how gas fees work',
+      ],
+      next: 'Ready for the real network? Always start small, never invest more than you can afford to lose, and keep exploring!',
+      restart: '🔄 Start Over'
+    },
+    ui: {
+      openLink: 'Open Link',
+      done: 'Done!',
+      typing: 'BNB Guide is typing...'
+    }
+  },
+
+  es: {
+    stepLabels: ['Faucet', 'Swap', 'Explorer', 'Gas'],
+    steps: [
+      {
+        icon: '🚰',
+        title: 'Paso 1: Obtén BNB de Prueba Gratis',
+        messages: [
+          {
+            text: `<h3>🚰 Obtén BNB de Prueba Gratis</h3>
+<p>Lo primero es lo primero — necesitas <strong>BNB de testnet</strong> para practicar. Este es <em>dinero ficticio</em> en la red de pruebas, así que puedes experimentar sin riesgo real.</p>
+<div class="highlight-box">
+  💡 <strong>Testnet</strong> = un entorno de práctica donde todo funciona exactamente como la blockchain real, pero los tokens no tienen valor real.
+</div>
+<p><strong>Qué hacer:</strong></p>
+<ul>
+  <li>Abre el enlace del faucet de abajo en tu navegador</li>
+  <li>Conecta tu billetera MetaMask (asegúrate de estar en BSC Testnet)</li>
+  <li>Haz clic en "Give Me BNB" — recibirás 0.1 tBNB</li>
+  <li>Espera ~30 segundos y verifica el saldo de tu billetera</li>
+</ul>
+<div class="info-box">
+  ℹ️ ¿No tienes MetaMask? Instálalo primero desde <strong>metamask.io</strong> y agrega la red BSC Testnet (Chain ID: 97).
+</div>`
+          }
+        ],
+        link: { url: 'https://testnet.bnbchain.org/faucet-smart', label: '🔗 Abrir Faucet de BNB Testnet' },
+        confirm: "✅ ¡Ya obtuve mi BNB de prueba!",
+        confirmMsg: `<div class="success-box">✅ <strong>¡Excelente!</strong> Ahora tienes BNB de testnet en tu billetera. ¡Estás listo para tu primer intercambio!</div>`
+      },
+      {
+        icon: '🔄',
+        title: 'Paso 2: Haz Tu Primer Intercambio',
+        messages: [
+          {
+            text: `<h3>🔄 Tu Primer Swap en PancakeSwap</h3>
+<p>Ahora hagamos un <strong>intercambio de tokens (swap)</strong> — esto significa cambiar un token por otro. Usaremos <strong>PancakeSwap</strong>, el mayor DEX en BNB Chain.</p>
+<div class="highlight-box">
+  💡 <strong>DEX</strong> (Exchange Descentralizado) = un lugar para intercambiar tokens directamente desde tu billetera, sin registro ni cuenta.
+</div>
+<p><strong>Pasos a seguir:</strong></p>
+<ul>
+  <li>Abre PancakeSwap con el enlace de abajo</li>
+  <li>Conecta tu billetera MetaMask</li>
+  <li>Asegúrate de que tu billetera esté en <strong>BSC Testnet</strong> (Chain ID: 97)</li>
+  <li>En el campo "De" selecciona <strong>BNB</strong></li>
+  <li>En el campo "A" selecciona <strong>BUSD</strong> u otro token de prueba</li>
+  <li>Ingresa una cantidad pequeña (ej. 0.01 BNB) y haz clic en <strong>Swap</strong></li>
+  <li>Confirma la transacción en MetaMask</li>
+</ul>
+<div class="info-box">
+  ℹ️ Verás una pequeña comisión de red (gas). ¡Es normal — lo explicaremos en el Paso 4!
+</div>`
+          }
+        ],
+        link: { url: 'https://pancakeswap.finance/swap', label: '🥞 Abrir PancakeSwap' },
+        confirm: "✅ ¡Hice mi primer swap!",
+        confirmMsg: `<div class="success-box">✅ <strong>¡Acabas de hacer tu primer swap DeFi!</strong> Es un gran logro. Ahora veamos esa transacción en el explorador de blockchain.</div>`
+      },
+      {
+        icon: '🔍',
+        title: 'Paso 3: Lee Tu Transacción',
+        messages: [
+          {
+            text: `<h3>🔍 Encuentra Tu Transacción en BscScan</h3>
+<p><strong>BscScan</strong> es como el "Google" de BNB Chain — muestra cada transacción, billetera y contrato inteligente en tiempo real. Completamente público y transparente.</p>
+<div class="highlight-box">
+  💡 Cada transacción en la blockchain tiene un ID único llamado <strong>Hash de Transacción (TxHash)</strong> — como un recibo que siempre puedes consultar.
+</div>
+<p><strong>Cómo encontrar tu transacción de swap:</strong></p>
+<ul>
+  <li>Abre BscScan Testnet con el enlace de abajo</li>
+  <li>Copia tu dirección de billetera desde MetaMask</li>
+  <li>Pégala en la barra de búsqueda de BscScan y presiona Enter</li>
+  <li>Verás el historial completo de transacciones de tu billetera</li>
+  <li>Haz clic en tu swap reciente para ver todos los detalles</li>
+</ul>
+<div class="info-box">
+  ℹ️ Busca estos campos en la página de transacción:<br>
+  • <strong>Estado:</strong> Success ✅ o Failed ❌<br>
+  • <strong>Bloque:</strong> en qué bloque fue incluida<br>
+  • <strong>Gas Usado:</strong> cuánto pagaste por el procesamiento
+</div>`
+          }
+        ],
+        link: { url: 'https://testnet.bscscan.com', label: '🔍 Abrir BscScan Testnet' },
+        confirm: "✅ ¡Encontré mi transacción!",
+        confirmMsg: `<div class="success-box">✅ <strong>¡Ya puedes leer la blockchain!</strong> Esta transparencia es uno de los superpoderes de las criptomonedas — cualquiera puede verificar cualquier transacción, en cualquier momento.</div>`
+      },
+      {
+        icon: '⛽',
+        title: 'Paso 4: Entiende las Comisiones de Gas',
+        messages: [
+          {
+            text: `<h3>⛽ ¿Qué son las Comisiones de Gas?</h3>
+<p>Ya viste mencionado el "gas" — vamos a desmitificarlo de una vez por todas.</p>
+<div class="highlight-box">
+  ⛽ <strong>Gas</strong> = la comisión que pagas a la red para que procese tu transacción. Imagínalo como el costo de envío de tu paquete.
+</div>
+<p><strong>La fórmula simple:</strong></p>
+<ul>
+  <li><strong>Comisión de Gas</strong> = Gas Usado × Precio del Gas (en Gwei)</li>
+  <li><strong>Gwei</strong> = una fracción tiny de BNB (1 BNB = 1,000,000,000 Gwei)</li>
+  <li>En BNB Chain, el gas suele ser muy barato (~1–5 Gwei)</li>
+</ul>
+<div class="highlight-box">
+  🌎 <strong>Analogía del mundo real:</strong> Imagina que quieres enviar una carta. El "gas" es el sello postal. Una carta más pesada (transacción compleja) necesita más sellos (más gas). ¡Los sellos de BNB Chain son muy baratos — generalmente menos de $0.01!
+</div>
+<p><strong>Consejos para manejar el gas:</strong></p>
+<ul>
+  <li>Transferencias simples = menos gas</li>
+  <li>Llamadas complejas a contratos = más gas</li>
+  <li>Las comisiones de BNB Chain son mucho más baratas que Ethereum</li>
+  <li>MetaMask muestra la comisión estimada antes de confirmar</li>
+</ul>
+<div class="info-box">
+  ℹ️ Las comisiones de gas en BNB Chain se pagan en BNB — siempre mantén una pequeña cantidad de BNB en tu billetera para cubrir comisiones.
+</div>`
+          }
+        ],
+        link: null,
+        confirm: "✅ ¡Entiendo las comisiones de gas!",
+        confirmMsg: `<div class="success-box">🎉 <strong>¡Completaste los 4 pasos!</strong> ¡Ya estás oficialmente listo para explorar BNB Chain!</div>`
+      }
+    ],
+    completion: {
+      icon: '🎉',
+      title: '¡Felicitaciones!',
+      body: '¡Completaste el tutorial de BNB Chain Testnet! Esto es lo que aprendiste:',
+      achievements: [
+        '🚰 Obtuviste BNB de prueba gratis del faucet',
+        '🔄 Hiciste tu primer swap en PancakeSwap',
+        '🔍 Leíste tu transacción en BscScan',
+        '⛽ Entendiste cómo funcionan las comisiones de gas',
+      ],
+      next: '¿Listo para la red real? Siempre empieza con cantidades pequeñas, nunca inviertas más de lo que puedes perder, ¡y sigue explorando!',
+      restart: '🔄 Comenzar de Nuevo'
+    },
+    ui: {
+      openLink: 'Abrir Enlace',
+      done: '¡Listo!',
+      typing: 'BNB Guide está escribiendo...'
+    }
+  }
+};
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let lang = 'en';
+let currentStep = 0;
+let stepPhase = 'explain'; // 'explain' | 'confirmed'
+let totalSteps = 4;
+
+// ══════════════════════════════════════
+//  WELCOME SCREEN LOGIC
+// ══════════════════════════════════════
+function selectLang(l) {
+  lang = l;
+  document.querySelectorAll('.welcome-lang-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btn-' + l).classList.add('selected');
+  const startBtn = document.getElementById('start-btn');
+  startBtn.classList.add('ready');
+  startBtn.textContent = l === 'es' ? '¡Vamos! →' : "Let's Go →";
+}
+
+function startOnboarding() {
+  document.getElementById('welcome-screen').classList.add('hidden');
+  initApp();
+}
+
+// ══════════════════════════════════════
+//  APP INIT
+// ══════════════════════════════════════
+function initApp() {
+  updateLangToggle();
+  buildProgress();
+  renderStep(0);
+}
+
+function updateLangToggle() {
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+  document.getElementById('lang-es').classList.toggle('active', lang === 'es');
+  document.getElementById('header-subtitle').textContent =
+    lang === 'es' ? 'Guía de Inicio Testnet' : 'Testnet Onboarding';
+}
+
+function switchLang(l) {
+  lang = l;
+  updateLangToggle();
+  // Re-render without clearing step progress
+  clearChat();
+  buildProgress();
+  if (currentStep >= totalSteps) {
+    showCompletion();
+  } else {
+    renderStep(currentStep, stepPhase === 'confirmed');
+  }
+}
+
+// ══════════════════════════════════════
+//  PROGRESS BAR
+// ══════════════════════════════════════
+function buildProgress() {
+  const C = content[lang];
+  const container = document.getElementById('progress-steps');
+  container.innerHTML = '';
+
+  C.steps.forEach((step, i) => {
+    // Line before dot (except first)
+    if (i > 0) {
+      const line = document.createElement('div');
+      line.className = 'step-line' + (i <= currentStep ? ' done' : '');
+      container.appendChild(line);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'step-dot-wrap';
+
+    const dot = document.createElement('div');
+    let dotClass = 'step-dot';
+    let dotContent = i + 1;
+    if (i < currentStep || (i === currentStep && stepPhase === 'confirmed' && i === totalSteps - 1)) {
+      dotClass += ' done'; dotContent = '';
+    } else if (i === currentStep) {
+      dotClass += ' active'; dotContent = i + 1;
+    }
+    dot.className = dotClass;
+    if (!dot.className.includes('done')) dot.textContent = dotContent;
+    wrap.appendChild(dot);
+
+    const label = document.createElement('div');
+    let labelClass = 'step-label';
+    if (i < currentStep) labelClass += ' done';
+    else if (i === currentStep) labelClass += ' active';
+    label.className = labelClass;
+    label.textContent = C.stepLabels[i];
+    wrap.appendChild(label);
+
+    container.appendChild(wrap);
+  });
+}
+
+// ══════════════════════════════════════
+//  CHAT HELPERS
+// ══════════════════════════════════════
+function clearChat() {
+  document.getElementById('chat-area').innerHTML = '';
+  document.getElementById('actions').innerHTML = '';
+}
+
+function addBotBubble(html, delay = 0) {
+  return new Promise(resolve => {
+    const chatArea = document.getElementById('chat-area');
+
+    // Show typing indicator
+    const typingEl = document.createElement('div');
+    typingEl.className = 'msg typing';
+    typingEl.innerHTML = `
+      <div class="bot-avatar">🤖</div>
+      <div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    `;
+    chatArea.appendChild(typingEl);
+    scrollChat();
+
+    setTimeout(() => {
+      typingEl.remove();
+      const msg = document.createElement('div');
+      msg.className = 'msg';
+      msg.innerHTML = `<div class="bot-avatar">🤖</div><div class="bubble">${html}</div>`;
+      chatArea.appendChild(msg);
+      scrollChat();
+      resolve();
+    }, delay + 800);
+  });
+}
+
+function addUserBubble(text) {
+  const chatArea = document.getElementById('chat-area');
+  const msg = document.createElement('div');
+  msg.className = 'msg';
+  msg.style.justifyContent = 'flex-end';
+  msg.innerHTML = `<div class="bubble user">${text}</div>`;
+  chatArea.appendChild(msg);
+  scrollChat();
+}
+
+function scrollChat() {
+  const chatArea = document.getElementById('chat-area');
+  setTimeout(() => chatArea.scrollTop = chatArea.scrollHeight, 50);
+}
+
+function setActions(html) {
+  document.getElementById('actions').innerHTML = html;
+}
+
+// ══════════════════════════════════════
+//  STEP RENDERER
+// ══════════════════════════════════════
+async function renderStep(idx, alreadyConfirmed = false) {
+  clearChat();
+  buildProgress();
+  const C = content[lang];
+  const step = C.steps[idx];
+
+  await addBotBubble(step.messages[0].text, 200);
+
+  if (!alreadyConfirmed) {
+    // Show link + confirm button
+    let actionsHtml = '';
+    if (step.link) {
+      actionsHtml += `<a class="btn btn-link" href="${step.link.url}" target="_blank" rel="noopener">${step.link.label} ↗</a>`;
+    }
+    actionsHtml += `<button class="btn btn-success" onclick="confirmStep(${idx})">${step.confirm}</button>`;
+    setActions(actionsHtml);
+  } else {
+    // Already confirmed — show confirm message and next
+    await addBotBubble(step.confirmMsg, 400);
+    if (idx < totalSteps - 1) {
+      setActions(`<button class="btn btn-primary" onclick="goNextStep(${idx})">
+        ${lang === 'es' ? '➜ Ir al Paso ' + (idx + 2) : '➜ Go to Step ' + (idx + 2)}
+      </button>`);
+    } else {
+      setActions(`<button class="btn btn-primary" onclick="showCompletion()">
+        ${lang === 'es' ? '🎉 Ver mi progreso' : '🎉 See my progress'}
+      </button>`);
+    }
+  }
+}
+
+async function confirmStep(idx) {
+  const C = content[lang];
+  const step = C.steps[idx];
+  stepPhase = 'confirmed';
+
+  addUserBubble(step.confirm);
+  setActions('');
+
+  await addBotBubble(step.confirmMsg, 600);
+
+  if (idx < totalSteps - 1) {
+    setActions(`<button class="btn btn-primary" onclick="goNextStep(${idx})">
+      ${lang === 'es' ? '➜ Ir al Paso ' + (idx + 2) : '➜ Go to Step ' + (idx + 2)}
+    </button>`);
+  } else {
+    setActions(`<button class="btn btn-primary" onclick="showCompletion()">
+      ${lang === 'es' ? '🎉 Ver mi progreso' : '🎉 See my progress'}
+    </button>`);
+  }
+}
+
+function goNextStep(idx) {
+  currentStep = idx + 1;
+  stepPhase = 'explain';
+  renderStep(currentStep);
+}
+
+// ══════════════════════════════════════
+//  COMPLETION
+// ══════════════════════════════════════
+function showCompletion() {
+  currentStep = totalSteps;
+  stepPhase = 'done';
+  clearChat();
+  buildProgress();
+
+  const C = content[lang].completion;
+  const chatArea = document.getElementById('chat-area');
+
+  const completionEl = document.createElement('div');
+  completionEl.className = 'msg';
+  completionEl.innerHTML = `
+    <div class="bot-avatar">🤖</div>
+    <div class="bubble">
+      <div class="completion">
+        <div class="completion-icon">${C.icon}</div>
+        <h2>${C.title}</h2>
+        <p>${C.body}</p>
+        <div style="text-align:left; background:rgba(240,185,11,0.07); border-radius:10px; padding:14px; margin: 12px 0;">
+          ${C.achievements.map(a => `<div style="margin-bottom:8px; font-size:14px;">${a}</div>`).join('')}
+        </div>
+        <div class="info-box" style="text-align:left;">${C.next}</div>
+      </div>
+    </div>
+  `;
+  chatArea.appendChild(completionEl);
+  scrollChat();
+
+  setActions(`<button class="btn btn-secondary" onclick="restartApp()">${C.restart}</button>`);
+}
+
+// ══════════════════════════════════════
+//  RESTART
+// ══════════════════════════════════════
+function restartApp() {
+  currentStep = 0;
+  stepPhase = 'explain';
+  clearChat();
+  buildProgress();
+  renderStep(0);
+}
+</script>
+</body>
+</html>
