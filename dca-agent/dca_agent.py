@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from groq import Groq
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from web3 import Web3
 
 # ─────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ DCA_AMOUNT_BNB          = float(os.getenv("DCA_AMOUNT_BNB", "0.01"))
 DCA_FREQUENCY           = os.getenv("DCA_FREQUENCY", "daily")   # "daily" | "weekly"
 GAS_THRESHOLD_GWEI      = int(os.getenv("GAS_THRESHOLD_GWEI", "20"))
 PRICE_CHANGE_THRESHOLD  = float(os.getenv("PRICE_CHANGE_THRESHOLD", "5.0"))  # percent
-MIN_LIQUIDITY_BNB       = float(os.getenv("MIN_LIQUIDITY_BNB", "1.0"))       # BNB in pool
+MIN_LIQUIDITY_BNB       = float(os.getenv("MIN_LIQUIDITY_BNB", "1.0"))       # BNB in pool (mainnet default: 1.0, testnet: 0.001)
 
 # ─────────────────────────────────────────────────────────────
 # 3.  BSC TESTNET CONSTANTS
@@ -328,7 +328,7 @@ Respond with a JSON object only (no markdown, no extra text):
 
     try:
         response = groq_client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,   # low temperature for consistent decisions
             max_tokens=200,
@@ -392,7 +392,7 @@ def execute_swap() -> dict:
         })
 
         signed  = w3.eth.account.sign_transaction(tx, private_key=PRIVATE_KEY)
-        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+        tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
 
         if receipt["status"] == 1:
@@ -425,84 +425,105 @@ async def run_dca_cycle(context=None):
     Runs all guardrails → AI decision → swap (or skip).
     Sends a Telegram alert with the result.
     """
-    if state["paused"]:
-        log.info("DCA cycle skipped — agent is paused.")
-        return
+    try:
+        log.info("━━━ DCA CYCLE STARTED ━━━")
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    log.info("── DCA Cycle starting at %s ──", timestamp)
+        if state["paused"]:
+            log.info("[CYCLE] Agent is paused — skipping cycle.")
+            return
 
-    # Run the three guardrail checks
-    gas_result   = check_gas_price()
-    price_result = check_price_stability()
-    liq_result   = check_liquidity()
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        log.info("[CYCLE] Timestamp: %s", timestamp)
 
-    log.info("Gas:       %s", gas_result["message"])
-    log.info("Price:     %s", price_result["message"])
-    log.info("Liquidity: %s", liq_result["message"])
+        # Guardrail 1 — Gas
+        log.info("[CYCLE] Checking gas price...")
+        gas_result = check_gas_price()
+        log.info("[CYCLE] Gas result: %s", gas_result)
 
-    # Ask Groq AI to make the final decision
-    decision = ai_should_buy(gas_result, price_result, liq_result)
+        # Guardrail 2 — Price stability
+        log.info("[CYCLE] Checking price stability...")
+        price_result = check_price_stability()
+        log.info("[CYCLE] Price result: %s", price_result)
 
-    cycle_record = {
-        "timestamp":    timestamp,
-        "gas":          gas_result,
-        "price":        price_result,
-        "liquidity":    liq_result,
-        "ai_decision":  decision,
-        "executed":     False,
-        "tx_hash":      "",
-    }
+        # Guardrail 3 — Liquidity
+        log.info("[CYCLE] Checking liquidity...")
+        liq_result = check_liquidity()
+        log.info("[CYCLE] Liquidity result: %s", liq_result)
 
-    if decision["should_buy"]:
-        # All guardrails passed → execute the swap
-        swap_result = execute_swap()
-        cycle_record["executed"] = swap_result["success"]
-        cycle_record["tx_hash"]  = swap_result.get("tx_hash", "")
+        # AI decision
+        log.info("[CYCLE] Sending guardrail data to Groq AI...")
+        decision = ai_should_buy(gas_result, price_result, liq_result)
+        log.info("[CYCLE] AI decision: should_buy=%s | reason=%s",
+                 decision["should_buy"], decision["reason"])
 
-        if swap_result["success"]:
-            state["total_invested"] += DCA_AMOUNT_BNB
-            state["cycles_run"]     += 1
-            msg = (
-                f"✅ *DCA Buy Executed*\n"
-                f"📅 {timestamp}\n"
-                f"💰 Bought tokens for `{DCA_AMOUNT_BNB}` BNB\n"
-                f"⛽ Gas: `{gas_result['value_gwei']} Gwei`\n"
-                f"📊 Price change: `{price_result['change_pct']:+.2f}%`\n"
-                f"💧 Liquidity: `{liq_result['reserve_bnb']} BNB`\n"
-                f"🤖 AI: _{decision['reason']}_\n"
-                f"🔗 [View on BscScan]({swap_result['explorer']})"
-            )
+        cycle_record = {
+            "timestamp":   timestamp,
+            "gas":         gas_result,
+            "price":       price_result,
+            "liquidity":   liq_result,
+            "ai_decision": decision,
+            "executed":    False,
+            "tx_hash":     "",
+        }
+
+        if decision["should_buy"]:
+            log.info("[CYCLE] All guardrails passed — executing swap...")
+            swap_result = execute_swap()
+            log.info("[CYCLE] Swap result: %s", swap_result)
+            cycle_record["executed"] = swap_result["success"]
+            cycle_record["tx_hash"]  = swap_result.get("tx_hash", "")
+
+            if swap_result["success"]:
+                state["total_invested"] += DCA_AMOUNT_BNB
+                state["cycles_run"]     += 1
+                msg = (
+                    f"✅ *DCA Buy Executed*\n"
+                    f"📅 {timestamp}\n"
+                    f"💰 Bought tokens for `{DCA_AMOUNT_BNB}` BNB\n"
+                    f"⛽ Gas: `{gas_result['value_gwei']} Gwei`\n"
+                    f"📊 Price change: `{price_result['change_pct']:+.2f}%`\n"
+                    f"💧 Liquidity: `{liq_result['reserve_bnb']} BNB`\n"
+                    f"🤖 AI: _{decision['reason']}_\n"
+                    f"🔗 [View on BscScan]({swap_result['explorer']})"
+                )
+            else:
+                state["cycles_skipped"] += 1
+                msg = (
+                    f"⚠️ *DCA Swap Failed*\n"
+                    f"📅 {timestamp}\n"
+                    f"{swap_result['message']}\n"
+                    f"🤖 AI approved but swap reverted on-chain."
+                )
         else:
             state["cycles_skipped"] += 1
+            failed = []
+            if not gas_result["ok"]:   failed.append(f"⛽ {gas_result['message']}")
+            if not price_result["ok"]: failed.append(f"📊 {price_result['message']}")
+            if not liq_result["ok"]:   failed.append(f"💧 {liq_result['message']}")
             msg = (
-                f"⚠️ *DCA Swap Failed*\n"
+                f"⏭️ *DCA Cycle Skipped*\n"
                 f"📅 {timestamp}\n"
-                f"{swap_result['message']}\n"
-                f"🤖 AI approved but swap reverted on-chain."
+                f"🤖 AI reason: _{decision['reason']}_\n\n"
+                f"*Failed guardrails:*\n" + "\n".join(failed)
             )
-    else:
-        # At least one guardrail failed → skip this cycle
-        state["cycles_skipped"] += 1
-        failed = []
-        if not gas_result["ok"]:   failed.append(f"⛽ {gas_result['message']}")
-        if not price_result["ok"]: failed.append(f"📊 {price_result['message']}")
-        if not liq_result["ok"]:   failed.append(f"💧 {liq_result['message']}")
 
-        msg = (
-            f"⏭️ *DCA Cycle Skipped*\n"
-            f"📅 {timestamp}\n"
-            f"🤖 AI reason: _{decision['reason']}_\n\n"
-            f"*Failed guardrails:*\n" + "\n".join(failed)
-        )
+        state["history"].append(cycle_record)
+        if len(state["history"]) > 50:
+            state["history"] = state["history"][-50:]
 
-    state["history"].append(cycle_record)
-    # Keep only last 50 cycle records
-    if len(state["history"]) > 50:
-        state["history"] = state["history"][-50:]
+        log.info("[CYCLE] Sending Telegram message...")
+        await send_telegram(msg, context)
+        log.info("━━━ DCA CYCLE COMPLETE ━━━")
 
-    # Send Telegram notification
-    await send_telegram(msg, context)
+    except Exception as exc:
+        import traceback
+        tb = traceback.format_exc()
+        log.error("[CYCLE] ❌ UNHANDLED EXCEPTION:\n%s", tb)
+        err_msg = f"❌ *DCA Cycle Error*\n`{type(exc).__name__}: {exc}`"
+        try:
+            await send_telegram(err_msg, context)
+        except Exception as tg_exc:
+            log.error("[CYCLE] Failed to send error to Telegram: %s", tg_exc)
 
 
 async def send_telegram(text: str, context=None):
@@ -512,10 +533,10 @@ async def send_telegram(text: str, context=None):
         return
     try:
         if context:
+            # No parse_mode — avoids Markdown entity errors from dynamic content
             await context.bot.send_message(
                 chat_id=TELEGRAM_CHAT_ID,
                 text=text,
-                parse_mode="Markdown",
                 disable_web_page_preview=True,
             )
         log.info("Telegram message sent.")
@@ -628,6 +649,33 @@ def main():
     application.add_handler(CommandHandler("resume",  cmd_resume))
     application.add_handler(CommandHandler("history", cmd_history))
     application.add_handler(CommandHandler("runnow",  cmd_runnow))
+
+    # Log chat_id of any incoming message — useful for confirming TELEGRAM_CHAT_ID
+    async def log_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        cid = update.effective_chat.id
+        log.info("Incoming message from chat_id: %s", cid)
+
+    application.add_handler(MessageHandler(filters.ALL, log_chat_id))
+
+    # Send a startup ping so we know the bot token + chat ID are working
+    async def startup_ping(context: ContextTypes.DEFAULT_TYPE):
+        if not TELEGRAM_CHAT_ID:
+            log.warning("TELEGRAM_CHAT_ID not set — skipping startup ping.")
+            return
+        await context.bot.send_message(
+            chat_id=TELEGRAM_CHAT_ID,
+            text=(
+                "🤖 *Bot is alive!*\n"
+                f"Wallet: `{WALLET_ADDRESS}`\n"
+                f"Network: BSC Testnet (chain 97)\n"
+                f"DCA: `{DCA_AMOUNT_BNB} BNB` every 5 min (test mode)\n"
+                f"First cycle fires in ~30s"
+            ),
+            parse_mode="Markdown",
+        )
+        log.info("Startup ping sent to chat_id: %s", TELEGRAM_CHAT_ID)
+
+    application.job_queue.run_once(startup_ping, when=3, name="startup_ping")
 
     # Determine DCA interval in seconds
     dca_interval = 300  # 5 minutes for testing (was: 86_400 daily / 604_800 weekly)
