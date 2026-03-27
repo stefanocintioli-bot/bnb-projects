@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DCA Agent Config — BNB Chain</title>
+<style>
+  :root {
+    --bnb:        #F0B90B;
+    --bnb-dark:   #C99A09;
+    --bnb-light:  rgba(240,185,11,0.08);
+    --bg:         #12121F;
+    --card:       #1E1E35;
+    --border:     #2E2E4E;
+    --text:       #F5F5F5;
+    --muted:      #9999BB;
+    --success:    #23C55E;
+    --error:      #EF4444;
+    --info:       #60A5FA;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ── Header ── */
+  header {
+    background: #1A1A2E;
+    border-bottom: 2px solid var(--bnb);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .logo {
+    width: 38px; height: 38px;
+    background: var(--bnb);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 16px; color: #12121F;
+    flex-shrink: 0;
+  }
+  .header-text h1 { font-size: 16px; font-weight: 800; }
+  .header-text p  { font-size: 11px; color: var(--muted); }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Section cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header .icon {
+    font-size: 20px;
+    width: 36px; height: 36px;
+    background: var(--bnb-light);
+    border: 1px solid rgba(240,185,11,0.2);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-header h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .card-header p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .card-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── Form fields ── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .field-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: -2px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: #141428;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--bnb);
+  }
+  input.error { border-color: var(--error); }
+  input::placeholder { color: var(--muted); }
+
+  select option { background: #1E1E35; }
+
+  /* Number input with unit label */
+  .input-group {
+    display: flex;
+    align-items: center;
+    background: #141428;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .input-group:focus-within { border-color: var(--bnb); }
+  .input-group input {
+    border: none;
+    border-radius: 0;
+    flex: 1;
+    padding: 12px 14px;
+    background: transparent;
+  }
+  .input-group input:focus { border: none; }
+  .input-unit {
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--bnb);
+    background: rgba(240,185,11,0.07);
+    border-left: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  /* Range slider */
+  .slider-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .slider-top  { display: flex; justify-content: space-between; align-items: center; }
+  .slider-val  { font-size: 18px; font-weight: 800; color: var(--bnb); }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    height: 6px;
+    background: var(--border);
+    border: none;
+    border-radius: 3px;
+    padding: 0;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--bnb);
+    border: 3px solid #12121F;
+    box-shadow: 0 0 8px rgba(240,185,11,0.4);
+    cursor: pointer;
+  }
+  input[type="range"]:focus { border-color: transparent; }
+
+  /* Toggle switch */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+  }
+  .toggle-label { font-size: 14px; font-weight: 600; }
+  .toggle-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .toggle {
+    position: relative;
+    width: 48px; height: 26px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: white;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--bnb); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+  /* Guardrail cards */
+  .guardrail {
+    background: #141428;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .guardrail-title {
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(240,185,11,0.15);
+    color: var(--bnb);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Token selector */
+  .token-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .token-chip {
+    padding: 8px 16px;
+    background: #141428;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .token-chip.selected {
+    border-color: var(--bnb);
+    background: rgba(240,185,11,0.1);
+    color: var(--bnb);
+  }
+
+  /* Frequency selector */
+  .freq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .freq-option {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    background: #141428;
+  }
+  .freq-option.selected {
+    border-color: var(--bnb);
+    background: rgba(240,185,11,0.07);
+  }
+  .freq-option .freq-icon { font-size: 24px; margin-bottom: 4px; }
+  .freq-option .freq-name { font-size: 14px; font-weight: 700; }
+  .freq-option .freq-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .freq-option.selected .freq-name { color: var(--bnb); }
+
+  /* Info / warning boxes */
+  .info-box {
+    background: rgba(96,165,250,0.07);
+    border: 1px solid rgba(96,165,250,0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #A5C4FF;
+    line-height: 1.5;
+  }
+  .warning-box {
+    background: rgba(239,68,68,0.07);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #FCA5A5;
+    line-height: 1.5;
+  }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--bnb);
+    color: #12121F;
+  }
+  .btn-primary:hover { background: var(--bnb-dark); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: var(--card);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--bnb); color: var(--bnb); }
+
+  /* Output / env block */
+  .env-output {
+    background: #0D0D1A;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #A5C4FF;
+    white-space: pre-wrap;
+    word-break: break-all;
+    position: relative;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .env-comment { color: #5A6A7A; }
+  .env-key     { color: #F0B90B; }
+  .env-val     { color: #86EFAC; }
+
+  .copy-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  .copy-btn {
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--bnb); color: var(--bnb); }
+  .copy-btn.copied { border-color: var(--success); color: var(--success); }
+
+  /* Validation message */
+  .field-error { font-size: 12px; color: var(--error); display: none; }
+  .field-error.show { display: block; }
+
+  /* Summary row */
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .summary-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .summary-label { color: var(--muted); }
+  .summary-value { font-weight: 700; color: var(--text); }
+  .summary-value.bnb { color: var(--bnb); }
+
+  @media (max-width: 420px) {
+    .freq-grid { grid-template-columns: 1fr 1fr; }
+    .freq-option .freq-icon { font-size: 20px; }
+    .freq-option .freq-name { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">B</div>
+  <div class="header-text">
+    <h1>DCA Agent Config</h1>
+    <p>BNB Chain Testnet · PancakeSwap</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── STEP 1: API KEYS ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon">🔑</div>
+      <div>
+        <h2>API Keys & Wallet</h2>
+        <p>Stored only in your .env file — never sent anywhere</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="warning-box">
+        ⚠️ <strong>Security:</strong> Your private key is only written to the local .env file you generate below. This UI runs entirely in your browser — nothing is sent to any server.
+      </div>
+      <div class="field">
+        <label>Groq API Key</label>
+        <div class="field-hint">Free at console.groq.com · Used for AI guardrail decisions</div>
+        <input type="password" id="groq_key" placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxx" oninput="updateOutput()">
+      </div>
+      <div class="field">
+        <label>Telegram Bot Token</label>
+        <div class="field-hint">Create a bot via @BotFather on Telegram</div>
+        <input type="password" id="tg_token" placeholder="1234567890:ABCdef..." oninput="updateOutput()">
+      </div>
+      <div class="field">
+        <label>Telegram Chat ID</label>
+        <div class="field-hint">Your personal chat ID — get it from @userinfobot</div>
+        <input type="text" id="tg_chat_id" placeholder="123456789" oninput="updateOutput()">
+      </div>
+      <div class="field">
+        <label>Wallet Private Key</label>
+        <div class="field-hint">Testnet wallet only — never use a mainnet wallet with real funds</div>
+        <input type="password" id="private_key" placeholder="0x..." oninput="updateOutput()">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: TOKEN SELECTION ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon">🪙</div>
+      <div>
+        <h2>Target Token</h2>
+        <p>Which token to buy with each DCA cycle</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label>Select Token</label>
+        <div class="token-list" id="token-list">
+          <div class="token-chip selected" onclick="selectToken(this, '0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee')">BUSD</div>
+          <div class="token-chip" onclick="selectToken(this, '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd')">USDT</div>
+          <div class="token-chip" onclick="selectToken(this, '0x8516Fc284AEEaa0374E66037BD2309349FF728eA')">CAKE</div>
+          <div class="token-chip custom" onclick="showCustomToken()">+ Custom</div>
+        </div>
+      </div>
+      <div class="field" id="custom-token-field" style="display:none">
+        <label>Custom Token Address</label>
+        <input type="text" id="custom_token_addr" placeholder="0x..." oninput="setCustomToken(this.value)">
+      </div>
+      <div class="field">
+        <label>Selected Token Address</label>
+        <input type="text" id="target_token_display" value="0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee" readonly style="opacity:0.6; font-size:13px; font-family: monospace;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: DCA PARAMETERS ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon">📅</div>
+      <div>
+        <h2>DCA Parameters</h2>
+        <p>Amount and frequency of each automated buy</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label>Amount per Cycle</label>
+        <div class="field-hint">How much BNB to spend on each automated buy</div>
+        <div class="input-group">
+          <input type="number" id="dca_amount" value="0.01" min="0.001" max="1" step="0.001" oninput="updateOutput(); updateSummary()">
+          <div class="input-unit">tBNB</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Frequency</label>
+        <div class="freq-grid">
+          <div class="freq-option selected" id="freq-daily" onclick="selectFrequency('daily')">
+            <div class="freq-icon">📆</div>
+            <div class="freq-name">Daily</div>
+            <div class="freq-desc">Every 24 hours</div>
+          </div>
+          <div class="freq-option" id="freq-weekly" onclick="selectFrequency('weekly')">
+            <div class="freq-icon">🗓️</div>
+            <div class="freq-name">Weekly</div>
+            <div class="freq-desc">Every 7 days</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: GUARDRAILS ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon">🛡️</div>
+      <div>
+        <h2>AI Guardrails</h2>
+        <p>The agent skips buys when these thresholds are breached</p>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <!-- Gas Price -->
+      <div class="guardrail">
+        <div class="guardrail-title">
+          ⛽ Gas Price Limit <span class="badge">Guardrail 1</span>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-top">
+            <span style="font-size:12px; color:var(--muted)">Max gas price</span>
+            <span class="slider-val"><span id="gas-val">20</span> Gwei</span>
+          </div>
+          <input type="range" id="gas_threshold" min="5" max="100" value="20"
+            oninput="document.getElementById('gas-val').textContent=this.value; updateOutput()">
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted)">
+            <span>5 Gwei</span><span>100 Gwei</span>
+          </div>
+        </div>
+        <div class="field-hint">Skip cycle if gas exceeds this value</div>
+      </div>
+
+      <!-- Price Stability -->
+      <div class="guardrail">
+        <div class="guardrail-title">
+          📊 Price Volatility Limit <span class="badge">Guardrail 2</span>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-top">
+            <span style="font-size:12px; color:var(--muted)">Max price change (1h)</span>
+            <span class="slider-val">±<span id="price-val">5</span>%</span>
+          </div>
+          <input type="range" id="price_threshold" min="1" max="20" value="5"
+            oninput="document.getElementById('price-val').textContent=this.value; updateOutput()">
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted)">
+            <span>1%</span><span>20%</span>
+          </div>
+        </div>
+        <div class="field-hint">Skip cycle if token moved more than this % in the last hour</div>
+      </div>
+
+      <!-- Liquidity -->
+      <div class="guardrail">
+        <div class="guardrail-title">
+          💧 Minimum Liquidity <span class="badge">Guardrail 3</span>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-top">
+            <span style="font-size:12px; color:var(--muted)">Min BNB in pool</span>
+            <span class="slider-val"><span id="liq-val">1.0</span> BNB</span>
+          </div>
+          <input type="range" id="liq_threshold" min="0.1" max="10" step="0.1" value="1.0"
+            oninput="document.getElementById('liq-val').textContent=parseFloat(this.value).toFixed(1); updateOutput()">
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted)">
+            <span>0.1 BNB</span><span>10 BNB</span>
+          </div>
+        </div>
+        <div class="field-hint">Skip cycle if the BNB/TOKEN pool has less BNB than this</div>
+      </div>
+
+      <div class="info-box">
+        🤖 <strong>AI Model:</strong> Groq <code>llama3-8b-8192</code> reviews all three guardrails and writes a plain-language explanation for every decision — whether to buy or skip.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 5: SUMMARY ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon">📋</div>
+      <div>
+        <h2>Strategy Summary</h2>
+        <p>Your configured DCA plan</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="summary-rows">
+        <div class="summary-row">
+          <span class="summary-label">Buying</span>
+          <span class="summary-value bnb" id="s-amount">0.01 tBNB</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Frequency</span>
+          <span class="summary-value" id="s-freq">Daily</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Monthly spend (est.)</span>
+          <span class="summary-value bnb" id="s-monthly">~0.30 tBNB</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Token</span>
+          <span class="summary-value" id="s-token">BUSD (testnet)</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Network</span>
+          <span class="summary-value">BSC Testnet (Chain ID 97)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OUTPUT: .env file ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon">📄</div>
+      <div>
+        <h2>Generated .env File</h2>
+        <p>Copy this into your project as <code>.env</code></p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="env-output" id="env-output"></div>
+      <div class="copy-row">
+        <button class="copy-btn" id="copy-btn" onclick="copyEnv()">📋 Copy .env</button>
+      </div>
+      <div class="field">
+        <button class="btn btn-primary" onclick="downloadEnv()">
+          ⬇️ Download .env File
+        </button>
+      </div>
+      <div class="info-box" style="margin-top:0">
+        After downloading: place <code>.env</code> in the <code>dca-agent/</code> folder, then run:<br>
+        <code style="color:var(--bnb)">pip install -r requirements.txt</code><br>
+        <code style="color:var(--bnb)">python dca_agent.py</code>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── State ──
+let selectedToken    = '0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee';
+let selectedTokenName = 'BUSD';
+let selectedFreq     = 'daily';
+
+// ── Token selection ──
+function selectToken(el, address) {
+  document.querySelectorAll('.token-chip:not(.custom)').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedToken     = address;
+  selectedTokenName = el.textContent.trim();
+  document.getElementById('target_token_display').value = address;
+  document.getElementById('custom-token-field').style.display = 'none';
+  updateOutput();
+  updateSummary();
+}
+
+function showCustomToken() {
+  document.querySelectorAll('.token-chip').forEach(c => c.classList.remove('selected'));
+  document.querySelector('.token-chip.custom').classList.add('selected');
+  document.getElementById('custom-token-field').style.display = 'flex';
+  document.getElementById('custom_token_addr').focus();
+}
+
+function setCustomToken(addr) {
+  selectedToken     = addr;
+  selectedTokenName = 'Custom';
+  document.getElementById('target_token_display').value = addr;
+  updateOutput();
+  updateSummary();
+}
+
+// ── Frequency selection ──
+function selectFrequency(freq) {
+  selectedFreq = freq;
+  document.getElementById('freq-daily').classList.toggle('selected', freq === 'daily');
+  document.getElementById('freq-weekly').classList.toggle('selected', freq === 'weekly');
+  updateOutput();
+  updateSummary();
+}
+
+// ── Summary ──
+function updateSummary() {
+  const amount  = parseFloat(document.getElementById('dca_amount').value) || 0.01;
+  const monthly = selectedFreq === 'daily' ? amount * 30 : amount * 4.3;
+
+  document.getElementById('s-amount').textContent  = `${amount} tBNB`;
+  document.getElementById('s-freq').textContent    = selectedFreq === 'daily' ? 'Daily' : 'Weekly';
+  document.getElementById('s-monthly').textContent = `~${monthly.toFixed(3)} tBNB`;
+  document.getElementById('s-token').textContent   = `${selectedTokenName} (testnet)`;
+}
+
+// ── .env generator ──
+function buildEnv() {
+  const groq       = document.getElementById('groq_key').value.trim()    || 'YOUR_GROQ_API_KEY';
+  const tgToken    = document.getElementById('tg_token').value.trim()    || 'YOUR_TELEGRAM_BOT_TOKEN';
+  const tgChat     = document.getElementById('tg_chat_id').value.trim()  || 'YOUR_TELEGRAM_CHAT_ID';
+  const pk         = document.getElementById('private_key').value.trim() || 'YOUR_WALLET_PRIVATE_KEY';
+  const amount     = document.getElementById('dca_amount').value         || '0.01';
+  const gas        = document.getElementById('gas_threshold').value      || '20';
+  const price      = document.getElementById('price_threshold').value    || '5';
+  const liq        = document.getElementById('liq_threshold').value      || '1.0';
+
+  return [
+    `# ─────────────────────────────────────────────`,
+    `# BNB Chain DCA Agent — Environment Variables`,
+    `# Generated by dca_ui.html`,
+    `# ─────────────────────────────────────────────`,
+    ``,
+    `# AI & Telegram`,
+    `GROQ_API_KEY=${groq}`,
+    `TELEGRAM_BOT_TOKEN=${tgToken}`,
+    `TELEGRAM_CHAT_ID=${tgChat}`,
+    ``,
+    `# Wallet (TESTNET ONLY — never use a mainnet key here)`,
+    `WALLET_PRIVATE_KEY=${pk}`,
+    ``,
+    `# BSC Testnet RPC`,
+    `RPC_URL=https://data-seed-prebsc-1-s1.binance.org:8545/`,
+    ``,
+    `# DCA Strategy`,
+    `DCA_AMOUNT_BNB=${amount}`,
+    `DCA_FREQUENCY=${selectedFreq}`,
+    `TARGET_TOKEN=${selectedToken}`,
+    ``,
+    `# Guardrail Thresholds`,
+    `GAS_THRESHOLD_GWEI=${gas}`,
+    `PRICE_CHANGE_THRESHOLD=${price}`,
+    `MIN_LIQUIDITY_BNB=${liq}`,
+  ].join('\n');
+}
+
+function updateOutput() {
+  const env    = buildEnv();
+  const output = document.getElementById('env-output');
+
+  // Syntax highlight
+  const highlighted = env
+    .split('\n')
+    .map(line => {
+      if (line.startsWith('#'))  return `<span class="env-comment">${escHtml(line)}</span>`;
+      if (line.includes('=')) {
+        const [key, ...rest] = line.split('=');
+        const val = rest.join('=');
+        return `<span class="env-key">${escHtml(key)}</span>=<span class="env-val">${escHtml(val)}</span>`;
+      }
+      return escHtml(line);
+    })
+    .join('\n');
+
+  output.innerHTML = highlighted;
+  updateSummary();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Copy to clipboard ──
+function copyEnv() {
+  const text = buildEnv();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy .env';
+      btn.classList.remove('copied');
+    }, 2500);
+  });
+}
+
+// ── Download ──
+function downloadEnv() {
+  const blob = new Blob([buildEnv()], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = '.env';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Init
+updateOutput();
+</script>
+</body>
+</html>

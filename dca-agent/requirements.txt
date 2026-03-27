@@ -1,0 +1,16 @@
+# BNB Chain DCA Agent — Python Dependencies
+
+# Blockchain interaction
+web3==6.20.3
+
+# AI decision engine
+groq==0.11.0
+
+# Telegram bot (v20+ with async support and built-in job queue)
+python-telegram-bot[job-queue]==21.6
+
+# Environment variable loading
+python-dotenv==1.0.1
+
+# HTTP client (used by web3 and groq under the hood)
+requests==2.32.3
