@@ -587,7 +587,8 @@ async def cmd_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     for c in reversed(recent):
         icon = "✅" if c["executed"] else ("⏭️" if not c["ai_decision"]["should_buy"] else "⚠️")
-        tx_part = f"\n   🔗 [tx]({f'https://testnet.bscscan.com/tx/{c[\"tx_hash\"]}'})" if c["tx_hash"] else ""
+        tx_hash = c["tx_hash"]
+        tx_part = f"\n   🔗 [tx](https://testnet.bscscan.com/tx/{tx_hash})" if tx_hash else ""
         lines.append(
             f"{icon} `{c['timestamp']}`\n"
             f"   _{c['ai_decision']['reason'][:80]}_"
@@ -629,7 +630,7 @@ def main():
     application.add_handler(CommandHandler("runnow",  cmd_runnow))
 
     # Determine DCA interval in seconds
-    dca_interval = 86_400 if DCA_FREQUENCY == "daily" else 604_800  # daily or weekly
+    dca_interval = 300  # 5 minutes for testing (was: 86_400 daily / 604_800 weekly)
 
     # Schedule the price tracker (every 60 seconds)
     application.job_queue.run_repeating(
