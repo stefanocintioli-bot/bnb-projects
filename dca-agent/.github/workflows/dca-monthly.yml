@@ -41,6 +41,9 @@ jobs:
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
           WALLET_PRIVATE_KEY:  ${{ secrets.WALLET_PRIVATE_KEY }}
           RPC_URL:             ${{ secrets.RPC_URL }}
+          CF_ACCOUNT_ID:       ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID:  ${{ secrets.CF_KV_NAMESPACE_ID }}
+          CF_KV_API_TOKEN:     ${{ secrets.CF_KV_API_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             python dca_agent.py --dry-run

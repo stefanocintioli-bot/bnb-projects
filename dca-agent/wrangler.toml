@@ -1,0 +1,21 @@
+name = "dca-agent-bot"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# ── KV namespace ──────────────────────────────────────────────
+# After creating your KV namespace (see CLOUDFLARE_SETUP.md),
+# replace the placeholder id below with your real namespace ID.
+[[kv_namespaces]]
+binding = "DCA_KV"
+id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# ── Secrets (set separately — never put values here) ──────────
+# Run these commands once to set each secret:
+#
+#   npx wrangler secret put TELEGRAM_BOT_TOKEN
+#   npx wrangler secret put TELEGRAM_WEBHOOK_SECRET
+#   npx wrangler secret put ALLOWED_CHAT_ID
+#   npx wrangler secret put GH_PAT
+#   npx wrangler secret put GH_REPO
+#   npx wrangler secret put GH_WORKFLOW_FILE
+#   npx wrangler secret put GH_BRANCH

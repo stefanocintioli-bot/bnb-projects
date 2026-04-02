@@ -48,6 +48,11 @@ GAS_THRESHOLD_GWEI      = int(os.getenv("GAS_THRESHOLD_GWEI", "20"))
 PRICE_CHANGE_THRESHOLD  = float(os.getenv("PRICE_CHANGE_THRESHOLD", "5.0"))  # percent
 MIN_LIQUIDITY_BNB       = float(os.getenv("MIN_LIQUIDITY_BNB", "1.0"))
 
+# Cloudflare KV (optional — enables /status /history /nextrun /dryrun via Telegram bot)
+CF_ACCOUNT_ID      = os.getenv("CF_ACCOUNT_ID", "")
+CF_KV_NAMESPACE_ID = os.getenv("CF_KV_NAMESPACE_ID", "")
+CF_KV_API_TOKEN    = os.getenv("CF_KV_API_TOKEN", "")
+
 # ─────────────────────────────────────────────────────────────
 # 3.  BSC TESTNET CONSTANTS
 # ─────────────────────────────────────────────────────────────
@@ -163,7 +168,71 @@ def send_telegram(text: str) -> None:
         log.error("Telegram send error: %s", exc)
 
 # ─────────────────────────────────────────────────────────────
-# 6.  PRICE HELPER
+# 6.  CLOUDFLARE KV HELPERS  (no-op when CF vars are absent)
+# ─────────────────────────────────────────────────────────────
+_KV_BASE = (
+    "https://api.cloudflare.com/client/v4/accounts/{account}"
+    "/storage/kv/namespaces/{ns}/values/{key}"
+)
+
+
+def _kv_headers() -> dict:
+    return {
+        "Authorization": f"Bearer {CF_KV_API_TOKEN}",
+        "Content-Type":  "application/json",
+    }
+
+
+def _kv_configured() -> bool:
+    return bool(CF_ACCOUNT_ID and CF_KV_NAMESPACE_ID and CF_KV_API_TOKEN)
+
+
+def read_kv(key: str):
+    """Read and JSON-parse a value from Cloudflare KV. Returns None on miss or error."""
+    if not _kv_configured():
+        return None
+    url = _KV_BASE.format(account=CF_ACCOUNT_ID, ns=CF_KV_NAMESPACE_ID, key=key)
+    try:
+        resp = requests.get(url, headers=_kv_headers(), timeout=10)
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as exc:
+        log.warning("KV read failed for key '%s': %s", key, exc)
+        return None
+
+
+def write_kv(key: str, value) -> None:
+    """Serialise value as JSON and write it to Cloudflare KV."""
+    if not _kv_configured():
+        log.info("Cloudflare KV not configured — skipping KV write for '%s'.", key)
+        return
+    url = _KV_BASE.format(account=CF_ACCOUNT_ID, ns=CF_KV_NAMESPACE_ID, key=key)
+    try:
+        resp = requests.put(
+            url,
+            data=json.dumps(value),
+            headers=_kv_headers(),
+            timeout=10,
+        )
+        resp.raise_for_status()
+        log.info("KV write OK: %s", key)
+    except Exception as exc:
+        log.error("KV write failed for key '%s': %s", key, exc)
+
+
+def persist_run(record: dict) -> None:
+    """Write last_run and prepend to history (capped at 5 entries) in KV."""
+    write_kv("last_run", record)
+    existing = read_kv("history") or []
+    if not isinstance(existing, list):
+        existing = []
+    write_kv("history", ([record] + existing)[:5])
+
+
+# ─────────────────────────────────────────────────────────────
+# 7.  PRICE HELPER
 # ─────────────────────────────────────────────────────────────
 def get_current_price_bnb() -> float:
     """Returns how many tokens 1 BNB buys right now via PancakeSwap."""
@@ -176,7 +245,7 @@ def get_current_price_bnb() -> float:
         return 0.0
 
 # ─────────────────────────────────────────────────────────────
-# 7.  GUARDRAIL CHECKS
+# 8.  GUARDRAIL CHECKS
 # ─────────────────────────────────────────────────────────────
 def check_gas_price() -> dict:
     """Guardrail 1: gas must be below GAS_THRESHOLD_GWEI."""
@@ -238,7 +307,7 @@ def check_liquidity() -> dict:
         return {"ok": False, "reserve_bnb": 0.0, "message": f"Liquidity check error: {exc}"}
 
 # ─────────────────────────────────────────────────────────────
-# 8.  GROQ AI ANALYSIS
+# 9.  GROQ AI ANALYSIS
 # ─────────────────────────────────────────────────────────────
 def ai_should_buy(gas_result: dict, price_result: dict, liq_result: dict) -> dict:
     """
@@ -311,7 +380,7 @@ Respond with a JSON object only (no markdown, no extra text):
         }
 
 # ─────────────────────────────────────────────────────────────
-# 9.  SWAP EXECUTION
+# 10.  SWAP EXECUTION
 # ─────────────────────────────────────────────────────────────
 def execute_swap() -> dict:
     """Calls swapExactETHForTokens on PancakeSwap testnet. 1% slippage tolerance."""
@@ -362,7 +431,7 @@ def execute_swap() -> dict:
         return {"success": False, "tx_hash": "", "message": f"Swap error: {exc}"}
 
 # ─────────────────────────────────────────────────────────────
-# 10.  MAIN — single-run entry point
+# 11.  MAIN — single-run entry point
 # ─────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="BNB Chain DCA Agent — single-run")
@@ -398,10 +467,26 @@ def main():
     decision = ai_should_buy(gas_result, price_result, liq_result)
     log.info("[AI]  should_buy=%s | reason=%s", decision["should_buy"], decision["reason"])
 
+    # ── Base run record (persisted to KV after the cycle) ─────
+    run_record = {
+        "status":      "pending",
+        "timestamp":   timestamp,
+        "tx_hash":     "",
+        "tx_url":      "",
+        "gas_gwei":    gas_result["value_gwei"],
+        "reserve_bnb": liq_result["reserve_bnb"],
+        "ai_reason":   decision["reason"],
+        "dry_run":     dry_run,
+        "amount_bnb":  DCA_AMOUNT_BNB,
+    }
+
+    exit_code = 0
+
     # ── Execute or skip ───────────────────────────────────────
     if decision["should_buy"]:
         if dry_run:
             log.info("[DRY-RUN] All guardrails passed. Would execute swap of %s BNB.", DCA_AMOUNT_BNB)
+            run_record["status"] = "dry_run"
             msg = (
                 f"<b>[DRY-RUN] DCA Cycle Simulated</b>\n"
                 f"Date: {timestamp}\n"
@@ -417,6 +502,9 @@ def main():
             swap_result = execute_swap()
 
             if swap_result["success"]:
+                run_record["status"]   = "executed"
+                run_record["tx_hash"]  = swap_result["tx_hash"]
+                run_record["tx_url"]   = swap_result["explorer"]
                 msg = (
                     f"<b>DCA Buy Executed</b>\n"
                     f"Date: {timestamp}\n"
@@ -427,22 +515,21 @@ def main():
                     f"<a href=\"{swap_result['explorer']}\">View on BscScan</a>"
                 )
             else:
+                run_record["status"] = "failed"
+                log.error("Swap failed: %s", swap_result["message"])
                 msg = (
                     f"<b>DCA Swap Failed</b>\n"
                     f"Date: {timestamp}\n"
                     f"{swap_result['message']}\n"
                     f"AI approved but swap reverted on-chain."
                 )
-                log.error("Swap failed: %s", swap_result["message"])
-                if not dry_run:
-                    send_telegram(msg)
-                sys.exit(1)
+                exit_code = 1
     else:
+        run_record["status"] = "skipped"
         failed = []
         if not gas_result["ok"]:   failed.append(f"Gas: {gas_result['message']}")
         if not price_result["ok"]: failed.append(f"Price: {price_result['message']}")
         if not liq_result["ok"]:   failed.append(f"Liquidity: {liq_result['message']}")
-
         msg = (
             f"<b>DCA Cycle Skipped</b>\n"
             f"Date: {timestamp}\n"
@@ -451,6 +538,9 @@ def main():
         )
         log.info("Cycle skipped — %s", " | ".join(failed) if failed else decision["reason"])
 
+    # ── Persist run record to Cloudflare KV ──────────────────
+    persist_run(run_record)
+
     # ── Telegram alert ────────────────────────────────────────
     if dry_run:
         log.info("[DRY-RUN] Telegram message that would be sent:\n%s", msg)
@@ -458,6 +548,7 @@ def main():
         send_telegram(msg)
 
     log.info("DCA cycle complete.")
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
