@@ -7,7 +7,7 @@ compatibility_date = "2024-09-23"
 # replace the placeholder id below with your real namespace ID.
 [[kv_namespaces]]
 binding = "DCA_KV"
-id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id      = "0cabe11c88814f38ac6a1b4d9054ef4b"
 
 # ── Secrets (set separately — never put values here) ──────────
 # Run these commands once to set each secret:
@@ -19,3 +19,5 @@ id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 #   npx wrangler secret put GH_REPO
 #   npx wrangler secret put GH_WORKFLOW_FILE
 #   npx wrangler secret put GH_BRANCH
+
+

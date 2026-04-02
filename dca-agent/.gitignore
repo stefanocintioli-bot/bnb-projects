@@ -14,3 +14,6 @@ build/
 # macOS
 .DS_Store
 .env
+
+# Wrangler local state (contains account credentials — never commit)
+.wrangler/
