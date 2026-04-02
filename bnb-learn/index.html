@@ -2,1799 +2,1699 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BNB Chain LatAm Learning Path</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* ── TOKENS ── */
 :root {
-  --bnb-yellow: #F0B90B;
-  --bnb-yellow-dark: #C99A09;
-  --bnb-yellow-glow: rgba(240,185,11,0.18);
-  --bnb-dark: #1A1A2E;
-  --bnb-darker: #0E0E1A;
-  --bnb-card: #1E1E35;
-  --bnb-card2: #252540;
-  --bnb-border: #2E2E50;
-  --text-primary: #F5F5F5;
-  --text-muted: #8888AA;
-  --success: #23C55E;
-  --success-bg: #0D2B1A;
-  --link-blue: #60A5FA;
+  --yellow: #F0B90B;
+  --yellow-light: #FEF9E7;
+  --yellow-mid: #FDF3C0;
+  --yellow-dark: #D4A200;
+  --text: #1A1A1A;
+  --muted: #666666;
+  --subtle: #999999;
+  --border: #E8E8E8;
+  --bg: #FFFFFF;
+  --bg-alt: #F8F8F8;
+  --success: #22C55E;
+  --success-light: #F0FDF4;
+  --success-border: #BBF7D0;
   --track1: #F0B90B;
-  --track2: #9B59B6;
-  --track3: #1ABC9C;
+  --track2: #7C3AED;
+  --track3: #0EA5E9;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.06);
+  --shadow: 0 2px 16px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
+  --r-card: 16px;
+  --r-btn: 10px;
+  --r-sm: 8px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 body {
-  font-family: 'Syne', -apple-system, sans-serif;
-  background: var(--bnb-darker);
-  color: var(--text-primary);
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+ul { list-style: none; }
 
-/* ── HEADER ── */
-header {
-  width: 100%;
-  background: var(--bnb-dark);
-  border-bottom: 2px solid var(--bnb-yellow);
-  padding: 12px 20px;
+/* ── NAV ── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 200;
 }
-.header-brand {
+.nav-brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
 }
-.bnb-logo {
-  width: 38px;
-  height: 38px;
-  background: var(--bnb-yellow);
-  border-radius: 50%;
+.nav-logo {
+  width: 36px;
+  height: 36px;
+  background: var(--yellow);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
-  font-size: 15px;
-  color: var(--bnb-dark);
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--text);
+  letter-spacing: -0.03em;
   flex-shrink: 0;
-  font-family: 'IBM Plex Mono', monospace;
 }
-.header-title { font-size: 15px; font-weight: 800; line-height: 1.2; }
-.header-sub { font-size: 10px; color: var(--text-muted); font-weight: 400; font-family: 'IBM Plex Mono', monospace; }
+.nav-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+}
+.nav-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+}
 .lang-toggle {
   display: flex;
-  background: var(--bnb-border);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   border-radius: 20px;
-  overflow: hidden;
+  padding: 3px;
+  gap: 2px;
 }
 .lang-btn {
-  padding: 6px 14px;
+  padding: 5px 14px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   border: none;
   background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Syne', sans-serif;
+  color: var(--muted);
+  border-radius: 17px;
+  transition: all 0.2s ease;
 }
-.lang-btn.active { background: var(--bnb-yellow); color: var(--bnb-dark); border-radius: 20px; }
+.lang-btn.active {
+  background: var(--yellow);
+  color: var(--text);
+}
 
 /* ── VIEWS ── */
 .view { display: none; }
 .view.active { display: block; }
 
 /* ── HOME ── */
-#home {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 24px 16px 60px;
-}
-.home-hero {
+#home { }
+
+/* HERO */
+.hero {
+  background: linear-gradient(180deg, var(--yellow-light) 0%, var(--bg) 100%);
+  padding: 48px 20px 40px;
   text-align: center;
-  padding: 32px 16px 24px;
 }
-.hero-badge {
-  display: inline-block;
-  background: var(--bnb-yellow-glow);
-  border: 1px solid var(--bnb-yellow);
-  color: var(--bnb-yellow);
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--yellow);
+  color: var(--text);
   font-size: 11px;
-  font-weight: 700;
-  font-family: 'IBM Plex Mono', monospace;
-  padding: 4px 14px;
+  font-weight: 600;
+  padding: 5px 14px;
   border-radius: 20px;
-  margin-bottom: 16px;
-  letter-spacing: 0.08em;
+  margin-bottom: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .hero-title {
-  font-size: clamp(26px, 6vw, 38px);
+  font-family: 'Syne', sans-serif;
   font-weight: 800;
-  line-height: 1.15;
-  margin-bottom: 12px;
+  font-size: clamp(28px, 7vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
 }
-.hero-title span { color: var(--bnb-yellow); }
+.hero-title .accent { color: var(--yellow-dark); }
 .hero-desc {
-  font-size: 15px;
-  color: var(--text-muted);
-  max-width: 480px;
-  margin: 0 auto 24px;
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 420px;
+  margin: 0 auto 28px;
   line-height: 1.6;
-  font-weight: 400;
 }
-.home-progress-summary {
+.hero-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 10px 18px;
+  box-shadow: var(--shadow-sm);
+  font-size: 14px;
+  font-weight: 500;
+}
+.progress-badge {
+  background: var(--yellow);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 3px 12px;
+  border-radius: 20px;
+}
+
+/* TRACKS */
+.tracks-section {
+  padding: 32px 20px 40px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.section-heading {
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--subtle);
+  margin-bottom: 16px;
+}
+
+.track-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+.track-card:hover { box-shadow: var(--shadow); }
+
+.track-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.track-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.t1 .track-icon-wrap { background: var(--yellow-light); }
+.t2 .track-icon-wrap { background: #F3F0FF; }
+.t3 .track-icon-wrap { background: #E0F2FE; }
+
+.track-info { flex: 1; min-width: 0; }
+.track-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 3px;
+}
+.track-tagline { font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+.track-meta-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.track-count {
+  font-size: 12px;
+  color: var(--subtle);
+  white-space: nowrap;
+}
+.track-chevron {
+  color: var(--subtle);
+  font-size: 18px;
+  transition: transform 0.25s ease;
+  line-height: 1;
+}
+.track-card.open .track-chevron { transform: rotate(180deg); }
+
+/* TRACK PROGRESS BAR */
+.track-progress-row {
+  padding: 0 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.track-bar {
+  flex: 1;
+  height: 5px;
+  background: var(--bg-alt);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.track-bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+.t1 .track-bar-fill { background: var(--track1); }
+.t2 .track-bar-fill { background: var(--track2); }
+.t3 .track-bar-fill { background: var(--track3); }
+.track-pct { font-size: 12px; font-weight: 600; color: var(--muted); min-width: 30px; text-align: right; }
+
+/* LESSON LIST (accordion body) */
+.track-lessons {
+  display: none;
+  border-top: 1px solid var(--border);
+}
+.track-card.open .track-lessons { display: block; }
+
+.lesson-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--bg-alt);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.lesson-row:last-child { border-bottom: none; }
+.lesson-row:hover { background: var(--bg-alt); }
+
+.lesson-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.lesson-num.done {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+  font-size: 15px;
+}
+.lesson-num.done::after { content: '✓'; font-weight: 700; }
+.lesson-num.done span { display: none; }
+
+.lesson-text { flex: 1; min-width: 0; }
+.lesson-row-title { font-size: 14px; font-weight: 500; }
+.lesson-row-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.lesson-arrow { color: var(--border); font-size: 16px; }
+
+.track-community-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--bnb-card);
-  border: 1px solid var(--bnb-border);
-  border-radius: 12px;
-  padding: 12px 20px;
-  margin: 0 auto 32px;
-  max-width: 320px;
+  width: calc(100% - 40px);
+  margin: 12px 20px 16px;
+  padding: 12px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--r-btn);
   font-size: 13px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
-.progress-pill {
-  background: var(--bnb-yellow-glow);
-  color: var(--bnb-yellow);
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 13px;
-}
-.section-label {
-  font-size: 11px;
-  font-weight: 700;
-  font-family: 'IBM Plex Mono', monospace;
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
+.track-community-btn:hover { background: var(--border); color: var(--text); }
 
-/* ── TRACK CARDS ── */
-.tracks-grid { display: flex; flex-direction: column; gap: 16px; margin-bottom: 40px; }
-.track-card {
-  background: var(--bnb-card);
-  border: 1px solid var(--bnb-border);
-  border-radius: 16px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.22s;
-  position: relative;
-  overflow: hidden;
-}
-.track-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  border-radius: 16px 16px 0 0;
-}
-.track-card[data-track="1"]::before { background: var(--track1); }
-.track-card[data-track="2"]::before { background: var(--track2); }
-.track-card[data-track="3"]::before { background: var(--track3); }
-.track-card:hover { border-color: var(--bnb-yellow); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(240,185,11,0.1); }
-
-.track-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
-.track-icon {
-  font-size: 28px;
-  width: 52px; height: 52px;
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.track-card[data-track="1"] .track-icon { background: rgba(240,185,11,0.12); }
-.track-card[data-track="2"] .track-icon { background: rgba(155,89,182,0.15); }
-.track-card[data-track="3"] .track-icon { background: rgba(26,188,156,0.12); }
-
-.track-meta { flex: 1; }
-.track-name { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
-.track-tagline { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
-.track-lessons-count {
-  font-size: 11px;
-  font-family: 'IBM Plex Mono', monospace;
-  color: var(--text-muted);
-  background: var(--bnb-card2);
-  border: 1px solid var(--bnb-border);
-  padding: 3px 10px;
-  border-radius: 20px;
-  align-self: flex-start;
-  white-space: nowrap;
-}
-
-.track-progress-bar {
-  height: 6px;
-  background: var(--bnb-border);
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-.track-progress-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: width 0.5s ease;
-}
-.track-card[data-track="1"] .track-progress-fill { background: var(--track1); }
-.track-card[data-track="2"] .track-progress-fill { background: var(--track2); }
-.track-card[data-track="3"] .track-progress-fill { background: var(--track3); }
-
-.track-lessons-list { display: flex; flex-direction: column; gap: 6px; }
-.track-lesson-item {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px; color: var(--text-muted);
-}
-.lesson-check {
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  border: 2px solid var(--bnb-border);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-size: 10px;
-  transition: all 0.2s;
-}
-.lesson-check.done { background: var(--success); border-color: var(--success); color: #fff; }
-.lesson-check.done::after { content: '✓'; font-weight: 700; }
-.track-cta {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--bnb-border);
-}
-.cta-btn {
-  background: var(--bnb-yellow);
-  color: var(--bnb-dark);
-  border: none;
-  border-radius: 10px;
-  padding: 10px 20px;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  font-family: 'Syne', sans-serif;
-  transition: all 0.2s;
-}
-.cta-btn:hover { background: var(--bnb-yellow-dark); transform: scale(1.03); }
-.cta-btn.outline {
-  background: transparent;
-  border: 2px solid var(--bnb-yellow);
-  color: var(--bnb-yellow);
-}
-.cta-status { font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--text-muted); }
-
-/* ── COMMUNITY SECTION ── */
+/* COMMUNITY SECTION */
 .community-section {
-  background: var(--bnb-card);
-  border: 1px solid var(--bnb-border);
-  border-radius: 16px;
-  padding: 24px 20px;
+  background: var(--bg-alt);
+  padding: 32px 20px 40px;
+  border-top: 1px solid var(--border);
 }
-.community-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
-.community-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; }
+.community-inner { max-width: 680px; margin: 0 auto; }
+.community-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+.community-desc { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
 .community-links { display: flex; flex-direction: column; gap: 10px; }
 .community-link {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--bnb-card2);
-  border: 1px solid var(--bnb-border);
-  border-radius: 12px;
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 14px 16px;
   text-decoration: none;
-  color: var(--text-primary);
-  transition: all 0.2s;
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--text);
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
-.community-link:hover { border-color: var(--bnb-yellow); background: var(--bnb-yellow-glow); }
-.community-link-icon { font-size: 22px; width: 36px; text-align: center; }
-.community-link-text { flex: 1; }
-.community-link-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; font-family: 'IBM Plex Mono', monospace; }
-.community-link-arrow { color: var(--text-muted); font-size: 16px; }
+.community-link:hover { border-color: var(--yellow); box-shadow: var(--shadow); }
+.cl-icon { font-size: 22px; flex-shrink: 0; }
+.cl-text { flex: 1; }
+.cl-name { font-weight: 600; font-size: 14px; }
+.cl-handle { font-size: 12px; color: var(--muted); }
+.cl-arrow { color: var(--border); font-size: 16px; }
 
 /* ── LESSON VIEW ── */
 #lesson {
+  min-height: 100vh;
+  background: var(--bg);
+}
+.lesson-topbar {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
   max-width: 680px;
   margin: 0 auto;
-  padding: 20px 16px 80px;
-}
-.lesson-nav {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 20px;
 }
 .back-btn {
-  background: var(--bnb-card);
-  border: 1px solid var(--bnb-border);
-  color: var(--text-primary);
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--r-btn);
   padding: 8px 14px;
   font-size: 13px;
-  cursor: pointer;
-  font-family: 'Syne', sans-serif;
   font-weight: 600;
-  transition: all 0.2s;
+  color: var(--text);
+  transition: all 0.2s ease;
 }
-.back-btn:hover { border-color: var(--bnb-yellow); color: var(--bnb-yellow); }
-.lesson-breadcrumb { font-size: 12px; color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; }
+.back-btn:hover { border-color: var(--yellow); }
+.lesson-breadcrumb { font-size: 12px; color: var(--muted); }
 
-.lesson-header {
-  background: var(--bnb-card);
-  border: 1px solid var(--bnb-border);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
+.lesson-body {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
 }
-.lesson-track-tag {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 11px;
-  font-family: 'IBM Plex Mono', monospace;
+
+.lesson-track-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 4px 12px;
+  padding: 5px 12px;
   border-radius: 20px;
-  margin-bottom: 12px;
-}
-.lesson-title { font-size: clamp(20px, 5vw, 26px); font-weight: 800; line-height: 1.25; margin-bottom: 8px; }
-.lesson-meta { font-size: 12px; color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; }
-
-.lesson-content {
-  background: var(--bnb-card);
-  border: 1px solid var(--bnb-border);
-  border-radius: 16px;
-  padding: 24px 20px;
-  margin-bottom: 20px;
-  line-height: 1.7;
-  font-size: 15px;
-}
-.lesson-content h3 {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--bnb-yellow);
-  margin: 20px 0 10px;
-}
-.lesson-content h3:first-child { margin-top: 0; }
-.lesson-content p { margin-bottom: 12px; color: var(--text-primary); }
-.lesson-content ul, .lesson-content ol {
-  margin: 10px 0 14px 20px;
-  display: flex; flex-direction: column; gap: 6px;
-}
-.lesson-content li { color: var(--text-primary); }
-.lesson-content strong { color: var(--bnb-yellow); }
-.lesson-content a { color: var(--link-blue); text-decoration: none; }
-.lesson-content a:hover { text-decoration: underline; }
-
-.callout {
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin: 14px 0;
-  font-size: 14px;
-  line-height: 1.6;
-}
-.callout-yellow { background: rgba(240,185,11,0.08); border-left: 3px solid var(--bnb-yellow); }
-.callout-blue { background: rgba(96,165,250,0.08); border-left: 3px solid var(--link-blue); color: #A5C4FF; }
-.callout-green { background: var(--success-bg); border-left: 3px solid var(--success); color: #6EE7A0; }
-.callout-purple { background: rgba(155,89,182,0.08); border-left: 3px solid var(--track2); color: #D1A8E8; }
-.callout-teal { background: rgba(26,188,156,0.08); border-left: 3px solid var(--track3); color: #7FD9C6; }
-
-.step-block {
-  background: var(--bnb-card2);
-  border: 1px solid var(--bnb-border);
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin: 10px 0;
-  display: flex; gap: 14px; align-items: flex-start;
-}
-.step-num {
-  background: var(--bnb-yellow);
-  color: var(--bnb-dark);
-  font-weight: 800;
-  font-size: 13px;
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-family: 'IBM Plex Mono', monospace;
-}
-.step-text { font-size: 14px; line-height: 1.6; }
-
-.code-block {
-  background: #0A0A15;
-  border: 1px solid var(--bnb-border);
-  border-radius: 10px;
-  padding: 14px 16px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
-  color: #A5C4FF;
-  margin: 12px 0;
-  overflow-x: auto;
-  line-height: 1.7;
+  margin-bottom: 16px;
 }
 
-.lesson-actions {
-  display: flex; flex-direction: column; gap: 12px;
-}
-.btn-primary {
-  width: 100%;
-  padding: 16px;
-  background: var(--bnb-yellow);
-  color: var(--bnb-dark);
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
+.lesson-title {
   font-family: 'Syne', sans-serif;
-  transition: all 0.2s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: clamp(22px, 5vw, 30px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
 }
-.btn-primary:hover { background: var(--bnb-yellow-dark); transform: scale(1.01); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-secondary {
+.lesson-meta { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+
+/* LESSON CONTENT */
+.lesson-content {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 24px 22px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.content-what {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.content-headline {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.35;
+  margin-bottom: 18px;
+}
+.bullet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.bullet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.bullet-dot {
+  width: 22px;
+  height: 22px;
+  background: var(--yellow-light);
+  border: 1.5px solid var(--yellow);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--yellow-dark);
+}
+
+/* DID YOU KNOW */
+.did-you-know {
+  background: var(--yellow-light);
+  border: 1px solid var(--yellow-mid);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.dyk-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.dyk-text { font-size: 13px; line-height: 1.6; color: #6B5500; }
+.dyk-text strong { color: var(--text); }
+
+/* ACTION STEP */
+.action-step {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.action-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.action-text { font-size: 13px; line-height: 1.6; color: var(--text); }
+.action-text strong { font-weight: 600; }
+.action-text a { color: #0070F3; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+
+/* STEP LIST */
+.steps-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-alt);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+}
+.step-badge {
+  width: 26px;
+  height: 26px;
+  background: var(--yellow);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: var(--text);
+}
+.step-body { font-size: 14px; line-height: 1.55; color: var(--text); }
+.step-body a { color: #0070F3; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+
+/* CODE BLOCK */
+.code-box {
+  background: #1A1A1A;
+  border-radius: var(--r-sm);
+  padding: 16px 18px;
+  margin: 14px 0 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #E2E8F0;
+  font-family: 'Courier New', Courier, monospace;
+  overflow-x: auto;
+}
+.code-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* TOOL CARD */
+.tool-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+}
+.tool-icon { font-size: 24px; flex-shrink: 0; margin-top: 1px; }
+.tool-info { flex: 1; }
+.tool-name { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+.tool-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.tool-link { font-size: 12px; color: #0070F3; font-weight: 500; margin-top: 4px; display: block; }
+
+/* LESSON ACTIONS */
+.lesson-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+.btn-complete {
+  width: 100%;
+  padding: 15px;
+  background: var(--yellow);
+  color: var(--text);
+  border: none;
+  border-radius: var(--r-btn);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(240,185,11,0.25);
+}
+.btn-complete:hover { background: var(--yellow-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(240,185,11,0.35); }
+.btn-complete:active { transform: translateY(0); }
+
+.btn-next {
+  width: 100%;
+  padding: 15px;
+  background: var(--text);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-btn);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.btn-next:hover { background: #333; transform: translateY(-1px); }
+
+.btn-outline {
   width: 100%;
   padding: 14px;
   background: transparent;
-  color: var(--text-primary);
-  border: 2px solid var(--bnb-border);
-  border-radius: 12px;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-btn);
   font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: 'Syne', sans-serif;
-  transition: all 0.2s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.btn-secondary:hover { border-color: var(--bnb-yellow); color: var(--bnb-yellow); }
-.btn-twitter {
-  background: #1DA1F2;
-  color: #fff;
-  border-color: #1DA1F2;
-}
-.btn-twitter:hover { background: #0d8fd8; border-color: #0d8fd8; color: #fff; }
-.btn-telegram {
-  background: #26A5E4;
-  color: #fff;
-  border-color: #26A5E4;
-}
-.btn-telegram:hover { background: #1a8fc7; border-color: #1a8fc7; color: #fff; }
-
-.done-banner {
-  background: var(--success-bg);
-  border: 1px solid var(--success);
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex; align-items: center; gap: 10px;
-  font-size: 14px;
-  color: #6EE7A0;
   font-weight: 600;
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.btn-outline:hover { border-color: var(--yellow); background: var(--yellow-light); }
+
+.btn-x {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+.btn-x:hover { background: #111; border-color: #111; }
+
+.btn-tg {
+  background: #2AABEE;
+  color: #fff;
+  border-color: #2AABEE;
+}
+.btn-tg:hover { background: #1a9bd8; border-color: #1a9bd8; }
+
+.done-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--success-light);
+  border: 1px solid var(--success-border);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #166534;
 }
 
 /* ── CERTIFICATE ── */
 #certificate {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 32px 16px 60px;
-  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: var(--bg-alt);
 }
+.cert-wrapper { max-width: 480px; width: 100%; }
 .cert-card {
-  background: var(--bnb-card);
-  border: 2px solid var(--bnb-yellow);
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 40px 28px;
-  position: relative;
-  overflow: hidden;
+  text-align: center;
+  box-shadow: var(--shadow-md);
 }
-.cert-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(240,185,11,0.06) 0%, transparent 70%);
-  pointer-events: none;
+.cert-badge {
+  width: 80px;
+  height: 80px;
+  background: var(--yellow);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  margin: 0 auto 20px;
 }
-.cert-emoji { font-size: 64px; margin-bottom: 16px; display: block; }
-.cert-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
-.cert-title span { color: var(--bnb-yellow); }
-.cert-sub { font-size: 15px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
-.cert-stats {
-  display: flex; justify-content: center; gap: 20px;
+.cert-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+.cert-sub {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.6;
   margin-bottom: 28px;
-  flex-wrap: wrap;
+}
+.cert-stats {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 28px;
 }
 .cert-stat {
-  background: var(--bnb-card2);
-  border: 1px solid var(--bnb-border);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 12px 18px;
+  padding: 14px 18px;
   text-align: center;
-  min-width: 90px;
+  flex: 1;
 }
-.cert-stat-num { font-size: 22px; font-weight: 800; color: var(--bnb-yellow); }
-.cert-stat-label { font-size: 11px; color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; }
-.cert-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.cert-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--yellow-dark);
+}
+.cert-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cert-actions { display: flex; flex-direction: column; gap: 10px; }
 
-/* ── UTILS ── */
-.hidden { display: none !important; }
-.mt8 { margin-top: 8px; }
-.mt16 { margin-top: 16px; }
-
+/* ── RESPONSIVE ── */
 @media (min-width: 520px) {
   .community-links { flex-direction: row; flex-wrap: wrap; }
-  .community-link { flex: 1; min-width: 180px; }
+  .community-link { flex: 1; min-width: 200px; }
   .cert-actions { flex-direction: row; }
-  .cert-actions .btn-primary, .cert-actions .btn-secondary { width: auto; flex: 1; }
+  .cert-actions .btn-outline, .cert-actions .btn-complete { flex: 1; width: auto; }
 }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header>
-  <div class="header-brand">
-    <div class="bnb-logo">BNB</div>
+<!-- ══ NAV ══ -->
+<nav>
+  <div class="nav-brand" onclick="goHome()">
+    <div class="nav-logo">BNB</div>
     <div>
-      <div class="header-title" data-en="BNB Chain LatAm" data-es="BNB Chain LatAm">BNB Chain LatAm</div>
-      <div class="header-sub" data-en="Learning Path" data-es="Ruta de Aprendizaje">Ruta de Aprendizaje</div>
+      <div class="nav-title" id="nav-title">BNB Chain LatAm</div>
+      <div class="nav-sub" id="nav-sub">Ruta de Aprendizaje</div>
     </div>
   </div>
   <div class="lang-toggle">
-    <button class="lang-btn" onclick="setLang('en')">EN</button>
-    <button class="lang-btn active" onclick="setLang('es')">ES</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn active" id="btn-es" onclick="setLang('es')">ES</button>
   </div>
-</header>
+</nav>
 
-<!-- ═══════════════ HOME VIEW ═══════════════ -->
+<!-- ══════════ HOME ══════════ -->
 <div id="home" class="view active">
-  <div class="home-hero">
-    <div class="hero-badge" data-en="🎓 FREE LEARNING PLATFORM" data-es="🎓 PLATAFORMA DE APRENDIZAJE GRATIS">🎓 PLATAFORMA DE APRENDIZAJE GRATIS</div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">🎓 <span id="hero-eyebrow">Aprendizaje Gratis</span></div>
     <h1 class="hero-title">
-      <span data-en="BNB Chain" data-es="BNB Chain">BNB Chain</span><br>
-      <span data-en="LatAm Learning Path" data-es="LatAm Learning Path">LatAm Learning Path</span>
+      <span id="hero-title-line1">BNB Chain</span><br>
+      <span class="accent" id="hero-title-line2">LatAm Learning Path</span>
     </h1>
-    <p class="hero-desc" data-en="Your step-by-step guide to understanding blockchain, AI agents, and vibecoding — built for LatAm." data-es="Tu guía paso a paso para entender blockchain, agentes de IA y vibecoding — hecha para LatAm.">Tu guía paso a paso para entender blockchain, agentes de IA y vibecoding — hecha para LatAm.</p>
-    <div class="home-progress-summary">
-      <span data-en="Progress:" data-es="Progreso:">Progreso:</span>
-      <span class="progress-pill" id="home-progress-pill">0 / 9</span>
-      <span data-en="lessons complete" data-es="lecciones completadas">lecciones completadas</span>
+    <p class="hero-desc" id="hero-desc">Tu guía paso a paso para entender blockchain, IA y vibecoding — hecha para LatAm.</p>
+    <div class="hero-progress">
+      <span id="hero-progress-label">Progreso:</span>
+      <span class="progress-badge" id="hero-pill">0 / 9</span>
+      <span id="hero-progress-suffix">lecciones</span>
     </div>
-  </div>
+  </section>
 
   <!-- TRACKS -->
-  <div class="section-label" data-en="YOUR LEARNING TRACKS" data-es="TUS TRACKS DE APRENDIZAJE">TUS TRACKS DE APRENDIZAJE</div>
-  <div class="tracks-grid">
+  <section class="tracks-section">
+    <div class="section-heading" id="tracks-heading">Tus Tracks</div>
 
     <!-- TRACK 1 -->
-    <div class="track-card" data-track="1" onclick="openTrack(1)">
-      <div class="track-header">
-        <div class="track-icon">🔗</div>
-        <div class="track-meta">
-          <div class="track-name" data-en="BNB Chain Basics" data-es="Fundamentos BNB Chain">Fundamentos BNB Chain</div>
-          <div class="track-tagline" data-en="Understand blockchain from scratch, no tech background needed." data-es="Entiende blockchain desde cero, sin conocimientos técnicos.">Entiende blockchain desde cero, sin conocimientos técnicos.</div>
+    <div class="track-card t1" id="track-card-1">
+      <div class="track-header" onclick="toggleTrack(1)">
+        <div class="track-icon-wrap">🔗</div>
+        <div class="track-info">
+          <div class="track-name" id="t1-name">BNB Chain Basics</div>
+          <div class="track-tagline" id="t1-tag">Blockchain desde cero, sin conocimientos previos.</div>
         </div>
-        <div class="track-lessons-count" data-en="3 lessons" data-es="3 lecciones">3 lecciones</div>
+        <div class="track-meta-right">
+          <div class="track-count" id="t1-count">3 lecciones</div>
+          <div class="track-chevron">▾</div>
+        </div>
       </div>
-      <div class="track-progress-bar"><div class="track-progress-fill" id="track1-bar" style="width:0%"></div></div>
-      <div class="track-lessons-list">
-        <div class="track-lesson-item"><div class="lesson-check" id="check-1-1"></div><span data-en="What is blockchain? (ELI5)" data-es="¿Qué es blockchain? (Muy fácil)">¿Qué es blockchain? (Muy fácil)</span></div>
-        <div class="track-lesson-item"><div class="lesson-check" id="check-1-2"></div><span data-en="What is BNB Chain and why LatAm?" data-es="¿Qué es BNB Chain y por qué LatAm?">¿Qué es BNB Chain y por qué LatAm?</span></div>
-        <div class="track-lesson-item"><div class="lesson-check" id="check-1-3"></div><span data-en="Your first wallet — set up MetaMask" data-es="Tu primera wallet — configura MetaMask">Tu primera wallet — configura MetaMask</span></div>
+      <div class="track-progress-row">
+        <div class="track-bar"><div class="track-bar-fill" id="bar-1" style="width:0%"></div></div>
+        <div class="track-pct" id="pct-1">0%</div>
       </div>
-      <div class="track-cta">
-        <span class="cta-status" id="track1-status"></span>
-        <button class="cta-btn" data-en="Start Track →" data-es="Empezar →">Empezar →</button>
+      <div class="track-lessons" id="lessons-1">
+        <div class="lesson-row" onclick="openLesson(1,1)">
+          <div class="lesson-num" id="lnum-1-1"><span>1</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-1-1">¿Qué es blockchain?</div>
+            <div class="lesson-row-time" id="ltime-1-1">3 min · ELI5</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <div class="lesson-row" onclick="openLesson(1,2)">
+          <div class="lesson-num" id="lnum-1-2"><span>2</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-1-2">¿Por qué BNB Chain para LatAm?</div>
+            <div class="lesson-row-time" id="ltime-1-2">3 min · Contexto local</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <div class="lesson-row" onclick="openLesson(1,3)">
+          <div class="lesson-num" id="lnum-1-3"><span>3</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-1-3">Configura tu primera wallet</div>
+            <div class="lesson-row-time" id="ltime-1-3">5 min · Paso a paso</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <a class="track-community-btn" href="https://t.me/BNBChainES" target="_blank" rel="noopener" id="t1-community">
+          ✈️ <span id="t1-community-text">Únete a la comunidad LatAm</span>
+        </a>
       </div>
     </div>
 
     <!-- TRACK 2 -->
-    <div class="track-card" data-track="2" onclick="openTrack(2)">
-      <div class="track-header">
-        <div class="track-icon">🤖</div>
-        <div class="track-meta">
-          <div class="track-name" data-en="AI & The Future" data-es="IA & El Futuro">IA & El Futuro</div>
-          <div class="track-tagline" data-en="Discover how AI and blockchain are reshaping the world." data-es="Descubre cómo la IA y blockchain están cambiando el mundo.">Descubre cómo la IA y blockchain están cambiando el mundo.</div>
+    <div class="track-card t2" id="track-card-2">
+      <div class="track-header" onclick="toggleTrack(2)">
+        <div class="track-icon-wrap">🤖</div>
+        <div class="track-info">
+          <div class="track-name" id="t2-name">AI & El Futuro</div>
+          <div class="track-tagline" id="t2-tag">IA y blockchain: la combinación más poderosa del momento.</div>
         </div>
-        <div class="track-lessons-count" data-en="3 lessons" data-es="3 lecciones">3 lecciones</div>
+        <div class="track-meta-right">
+          <div class="track-count" id="t2-count">3 lecciones</div>
+          <div class="track-chevron">▾</div>
+        </div>
       </div>
-      <div class="track-progress-bar"><div class="track-progress-fill" id="track2-bar" style="width:0%"></div></div>
-      <div class="track-lessons-list">
-        <div class="track-lesson-item"><div class="lesson-check" id="check-2-1"></div><span data-en="What is AI and why it matters for Web3?" data-es="¿Qué es la IA y por qué importa en Web3?">¿Qué es la IA y por qué importa en Web3?</span></div>
-        <div class="track-lesson-item"><div class="lesson-check" id="check-2-2"></div><span data-en="What are AI Agents?" data-es="¿Qué son los Agentes de IA?">¿Qué son los Agentes de IA?</span></div>
-        <div class="track-lesson-item"><div class="lesson-check" id="check-2-3"></div><span data-en="MCP + BNB Chain — AI meets blockchain" data-es="MCP + BNB Chain — la IA conecta con blockchain">MCP + BNB Chain — la IA conecta con blockchain</span></div>
+      <div class="track-progress-row">
+        <div class="track-bar"><div class="track-bar-fill" id="bar-2" style="width:0%"></div></div>
+        <div class="track-pct" id="pct-2">0%</div>
       </div>
-      <div class="track-cta">
-        <span class="cta-status" id="track2-status"></span>
-        <button class="cta-btn" data-en="Start Track →" data-es="Empezar →">Empezar →</button>
+      <div class="track-lessons" id="lessons-2">
+        <div class="lesson-row" onclick="openLesson(2,1)">
+          <div class="lesson-num" id="lnum-2-1"><span>1</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-2-1">¿Qué es la IA?</div>
+            <div class="lesson-row-time" id="ltime-2-1">3 min · Analogía fácil</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <div class="lesson-row" onclick="openLesson(2,2)">
+          <div class="lesson-num" id="lnum-2-2"><span>2</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-2-2">¿Qué son los Agentes de IA?</div>
+            <div class="lesson-row-time" id="ltime-2-2">3 min · Analogía fácil</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <div class="lesson-row" onclick="openLesson(2,3)">
+          <div class="lesson-num" id="lnum-2-3"><span>3</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-2-3">IA + BNB Chain</div>
+            <div class="lesson-row-time" id="ltime-2-3">4 min · El futuro</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <a class="track-community-btn" href="https://t.me/BNBChainES" target="_blank" rel="noopener" id="t2-community">
+          ✈️ <span id="t2-community-text">Únete a la comunidad LatAm</span>
+        </a>
       </div>
     </div>
 
     <!-- TRACK 3 -->
-    <div class="track-card" data-track="3" onclick="openTrack(3)">
-      <div class="track-header">
-        <div class="track-icon">🛠️</div>
-        <div class="track-meta">
-          <div class="track-name" data-en="Vibecoding" data-es="Vibecoding">Vibecoding</div>
-          <div class="track-tagline" data-en="Build real Web3 products with just your words and AI." data-es="Construye productos Web3 reales solo con palabras y IA.">Construye productos Web3 reales solo con palabras y IA.</div>
+    <div class="track-card t3" id="track-card-3">
+      <div class="track-header" onclick="toggleTrack(3)">
+        <div class="track-icon-wrap">🛠️</div>
+        <div class="track-info">
+          <div class="track-name" id="t3-name">Vibecoding</div>
+          <div class="track-tagline" id="t3-tag">Construye productos reales con palabras — sin saber código.</div>
         </div>
-        <div class="track-lessons-count" data-en="3 lessons" data-es="3 lecciones">3 lecciones</div>
+        <div class="track-meta-right">
+          <div class="track-count" id="t3-count">3 lecciones</div>
+          <div class="track-chevron">▾</div>
+        </div>
       </div>
-      <div class="track-progress-bar"><div class="track-progress-fill" id="track3-bar" style="width:0%"></div></div>
-      <div class="track-lessons-list">
-        <div class="track-lesson-item"><div class="lesson-check" id="check-3-1"></div><span data-en="What is vibecoding?" data-es="¿Qué es el vibecoding?">¿Qué es el vibecoding?</span></div>
-        <div class="track-lesson-item"><div class="lesson-check" id="check-3-2"></div><span data-en="Tools: Claude Code, Cursor, Replit" data-es="Herramientas: Claude Code, Cursor, Replit">Herramientas: Claude Code, Cursor, Replit</span></div>
-        <div class="track-lesson-item"><div class="lesson-check" id="check-3-3"></div><span data-en="Your first prompt — build on BNB Chain" data-es="Tu primer prompt — construye en BNB Chain">Tu primer prompt — construye en BNB Chain</span></div>
+      <div class="track-progress-row">
+        <div class="track-bar"><div class="track-bar-fill" id="bar-3" style="width:0%"></div></div>
+        <div class="track-pct" id="pct-3">0%</div>
       </div>
-      <div class="track-cta">
-        <span class="cta-status" id="track3-status"></span>
-        <button class="cta-btn" data-en="Start Track →" data-es="Empezar →">Empezar →</button>
+      <div class="track-lessons" id="lessons-3">
+        <div class="lesson-row" onclick="openLesson(3,1)">
+          <div class="lesson-num" id="lnum-3-1"><span>1</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-3-1">¿Qué es el vibecoding?</div>
+            <div class="lesson-row-time" id="ltime-3-1">3 min · Introducción</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <div class="lesson-row" onclick="openLesson(3,2)">
+          <div class="lesson-num" id="lnum-3-2"><span>2</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-3-2">Herramientas para empezar</div>
+            <div class="lesson-row-time" id="ltime-3-2">4 min · Claude, Cursor, Replit</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <div class="lesson-row" onclick="openLesson(3,3)">
+          <div class="lesson-num" id="lnum-3-3"><span>3</span></div>
+          <div class="lesson-text">
+            <div class="lesson-row-title" id="lrow-3-3">Tu primer prompt</div>
+            <div class="lesson-row-time" id="ltime-3-3">5 min · Copia y prueba</div>
+          </div>
+          <div class="lesson-arrow">›</div>
+        </div>
+        <a class="track-community-btn" href="https://t.me/BNBChainES" target="_blank" rel="noopener" id="t3-community">
+          ✈️ <span id="t3-community-text">Únete a la comunidad LatAm</span>
+        </a>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- COMMUNITY SECTION -->
-  <div class="section-label" data-en="LATAM COMMUNITY" data-es="COMUNIDAD LATAM">COMUNIDAD LATAM</div>
-  <div class="community-section">
-    <div class="community-title" data-en="🌎 Join the Community" data-es="🌎 Únete a la Comunidad">🌎 Únete a la Comunidad</div>
-    <p class="community-desc" data-en="Connect with thousands of LatAm builders, traders, and crypto enthusiasts on BNB Chain." data-es="Conéctate con miles de builders, traders y entusiastas cripto de LatAm en BNB Chain.">Conéctate con miles de builders, traders y entusiastas cripto de LatAm en BNB Chain.</p>
-    <div class="community-links">
-      <a class="community-link" href="https://t.me/BNBChainLatam" target="_blank" rel="noopener">
-        <span class="community-link-icon">✈️</span>
-        <div class="community-link-text">
-          <div>Telegram</div>
-          <div class="community-link-sub">@BNBChainLatam</div>
-        </div>
-        <span class="community-link-arrow">↗</span>
-      </a>
-      <a class="community-link" href="https://twitter.com/BNBCHAIN" target="_blank" rel="noopener">
-        <span class="community-link-icon">𝕏</span>
-        <div class="community-link-text">
-          <div>Twitter / X</div>
-          <div class="community-link-sub">@BNBCHAIN</div>
-        </div>
-        <span class="community-link-arrow">↗</span>
-      </a>
-      <a class="community-link" href="https://github.com/stefanocintioli-bot/bnb-projects" target="_blank" rel="noopener">
-        <span class="community-link-icon">🐙</span>
-        <div class="community-link-text">
-          <div>GitHub</div>
-          <div class="community-link-sub">bnb-projects</div>
-        </div>
-        <span class="community-link-arrow">↗</span>
-      </a>
+  <!-- COMMUNITY -->
+  <section class="community-section">
+    <div class="community-inner">
+      <div class="section-heading" id="comm-heading">Comunidad</div>
+      <div class="community-title" id="comm-title">🌎 Únete a LatAm</div>
+      <p class="community-desc" id="comm-desc">Conéctate con miles de builders, traders y entusiastas cripto en LatAm.</p>
+      <div class="community-links">
+        <a class="community-link" href="https://x.com/BNBChainLatAm" target="_blank" rel="noopener">
+          <div class="cl-icon">𝕏</div>
+          <div class="cl-text">
+            <div class="cl-name">Twitter / X</div>
+            <div class="cl-handle">@BNBChainLatAm</div>
+          </div>
+          <div class="cl-arrow">›</div>
+        </a>
+        <a class="community-link" href="https://t.me/BNBChainES" target="_blank" rel="noopener">
+          <div class="cl-icon">✈️</div>
+          <div class="cl-text">
+            <div class="cl-name">Telegram</div>
+            <div class="cl-handle">@BNBChainES</div>
+          </div>
+          <div class="cl-arrow">›</div>
+        </a>
+        <a class="community-link" href="https://github.com/bnb-chain" target="_blank" rel="noopener">
+          <div class="cl-icon">🐙</div>
+          <div class="cl-text">
+            <div class="cl-name">GitHub</div>
+            <div class="cl-handle">bnb-chain</div>
+          </div>
+          <div class="cl-arrow">›</div>
+        </a>
+      </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<!-- ═══════════════ LESSON VIEW ═══════════════ -->
+</div><!-- /home -->
+
+
+<!-- ══════════ LESSON ══════════ -->
 <div id="lesson" class="view">
-  <div class="lesson-nav">
-    <button class="back-btn" onclick="goHome()">← <span data-en="Back" data-es="Volver">Volver</span></button>
-    <span class="lesson-breadcrumb" id="lesson-breadcrumb"></span>
-  </div>
-  <div class="lesson-header" id="lesson-header"></div>
-  <div class="lesson-content" id="lesson-content"></div>
-  <div class="lesson-actions" id="lesson-actions"></div>
-</div>
 
-<!-- ═══════════════ CERTIFICATE VIEW ═══════════════ -->
-<div id="certificate" class="view">
-  <div class="cert-card">
-    <span class="cert-emoji">🎓</span>
-    <h2 class="cert-title"><span data-en="Learning Path" data-es="Learning Path">Learning Path</span><br><span data-en="Complete!" data-es="¡Completado!">¡Completado!</span></h2>
-    <p class="cert-sub" data-en="You've completed the full BNB Chain LatAm Learning Path. You now understand blockchain, AI agents, and vibecoding. Welcome to Web3! 🚀" data-es="Completaste el BNB Chain LatAm Learning Path 🎉 Ya entiendes blockchain, agentes de IA y vibecoding. ¡Bienvenido/a a Web3! 🚀">Completaste el BNB Chain LatAm Learning Path 🎉 Ya entiendes blockchain, agentes de IA y vibecoding. ¡Bienvenido/a a Web3! 🚀</p>
-    <div class="cert-stats">
-      <div class="cert-stat"><div class="cert-stat-num">3</div><div class="cert-stat-label" data-en="Tracks" data-es="Tracks">Tracks</div></div>
-      <div class="cert-stat"><div class="cert-stat-num">9</div><div class="cert-stat-label" data-en="Lessons" data-es="Lecciones">Lecciones</div></div>
-      <div class="cert-stat"><div class="cert-stat-num">100%</div><div class="cert-stat-label" data-en="Complete" data-es="Completado">Completado</div></div>
-    </div>
-    <div class="cert-actions">
-      <button class="btn-secondary btn-twitter" onclick="shareCertificate()">𝕏 <span data-en="Share Achievement" data-es="Compartir Logro">Compartir Logro</span></button>
-      <a class="btn-secondary btn-telegram" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;" href="https://t.me/BNBChainLatam" target="_blank">✈️ <span data-en="Join Community" data-es="Unirte a la Comunidad">Unirte a la Comunidad</span></a>
-    </div>
-    <button class="btn-primary mt16" onclick="goHome()" style="max-width:300px;margin:16px auto 0;">← <span data-en="Back to Home" data-es="Volver al Inicio">Volver al Inicio</span></button>
+  <div class="lesson-topbar">
+    <button class="back-btn" onclick="goHome()">← <span id="back-label">Volver</span></button>
+    <span class="lesson-breadcrumb" id="breadcrumb"></span>
   </div>
-</div>
+
+  <div class="lesson-body">
+    <div class="lesson-track-chip" id="lesson-chip"></div>
+    <h1 class="lesson-title" id="lesson-title"></h1>
+    <p class="lesson-meta" id="lesson-meta"></p>
+    <div id="lesson-content"></div>
+    <div class="lesson-actions" id="lesson-actions"></div>
+  </div>
+
+</div><!-- /lesson -->
+
+
+<!-- ══════════ CERTIFICATE ══════════ -->
+<div id="certificate" class="view">
+  <div class="cert-wrapper">
+    <div class="cert-card">
+      <div class="cert-badge">🎓</div>
+      <h2 class="cert-title" id="cert-title">¡Learning Path<br>Completado!</h2>
+      <p class="cert-sub" id="cert-sub">Completaste las 9 lecciones del BNB Chain LatAm Learning Path. Ya entiendes blockchain, IA y vibecoding. ¡Bienvenido/a a Web3! 🚀</p>
+      <div class="cert-stats">
+        <div class="cert-stat"><div class="cert-num">3</div><div class="cert-label" id="cert-tracks">Tracks</div></div>
+        <div class="cert-stat"><div class="cert-num">9</div><div class="cert-label" id="cert-lessons">Lecciones</div></div>
+        <div class="cert-stat"><div class="cert-num">100%</div><div class="cert-label" id="cert-complete">Completado</div></div>
+      </div>
+      <div class="cert-actions">
+        <button class="btn-outline btn-x" onclick="shareCert()">𝕏 <span id="cert-share-x">Compartir Logro</span></button>
+        <a class="btn-outline btn-tg" href="https://t.me/BNBChainES" target="_blank" rel="noopener">✈️ <span id="cert-join">Unirte a la Comunidad</span></a>
+      </div>
+      <button class="btn-complete" onclick="goHome()" style="margin-top:14px" id="cert-home-btn">← Volver al Inicio</button>
+    </div>
+  </div>
+</div><!-- /certificate -->
+
 
 <script>
-// ══════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════
-let currentLang = 'es';
-let currentTrack = 1;
-let currentLessonIdx = 0; // 0-2
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let LANG = 'es';
+let VIEW_TRACK = 1;
+let VIEW_LESSON = 1;
+
+const SITE_URL = 'https://bnb-learn.vercel.app';
 
 function getProgress() {
-  try { return JSON.parse(localStorage.getItem('bnb_learn_progress') || '[]'); }
+  try { return JSON.parse(localStorage.getItem('bnblp_v2') || '[]'); }
   catch(e) { return []; }
 }
-function markDone(track, lesson) {
-  const p = getProgress();
-  const key = `${track}-${lesson}`;
-  if (!p.includes(key)) { p.push(key); localStorage.setItem('bnb_learn_progress', JSON.stringify(p)); }
+function setProgress(arr) { localStorage.setItem('bnblp_v2', JSON.stringify(arr)); }
+function markDone(t, l) {
+  const p = getProgress(), k = `${t}-${l}`;
+  if (!p.includes(k)) { p.push(k); setProgress(p); }
 }
-function isDone(track, lesson) { return getProgress().includes(`${track}-${lesson}`); }
-function countDone() { return getProgress().length; }
-function trackDoneCount(t) { return [1,2,3].filter(l => isDone(t, l)).length; }
+function isDone(t, l) { return getProgress().includes(`${t}-${l}`); }
+function totalDone() { return getProgress().length; }
+function trackDone(t) { return [1,2,3].filter(l => isDone(t,l)).length; }
 
-// ══════════════════════════════════════════════
-// LANGUAGE
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════
+//  LANGUAGE
+// ═══════════════════════════════════════
+const TX = {
+  nav_sub: { en: 'Learning Path', es: 'Ruta de Aprendizaje' },
+  hero_eyebrow: { en: 'Free Learning', es: 'Aprendizaje Gratis' },
+  hero_t1: { en: 'BNB Chain', es: 'BNB Chain' },
+  hero_t2: { en: 'LatAm Learning Path', es: 'LatAm Learning Path' },
+  hero_desc: { en: 'Your step-by-step guide to blockchain, AI, and vibecoding — made for LatAm.', es: 'Tu guía paso a paso para entender blockchain, IA y vibecoding — hecha para LatAm.' },
+  hero_pl: { en: 'Progress:', es: 'Progreso:' },
+  hero_ps: { en: 'lessons', es: 'lecciones' },
+  tracks_h: { en: 'Your Tracks', es: 'Tus Tracks' },
+  t1_name: { en: 'BNB Chain Basics', es: 'BNB Chain Basics' },
+  t1_tag: { en: 'Blockchain from scratch, no background needed.', es: 'Blockchain desde cero, sin conocimientos previos.' },
+  t1_count: { en: '3 lessons', es: '3 lecciones' },
+  t2_name: { en: 'AI & The Future', es: 'AI & El Futuro' },
+  t2_tag: { en: 'AI and blockchain: the most powerful combo of the moment.', es: 'IA y blockchain: la combinación más poderosa del momento.' },
+  t2_count: { en: '3 lessons', es: '3 lecciones' },
+  t3_name: { en: 'Vibecoding', es: 'Vibecoding' },
+  t3_tag: { en: 'Build real products with words — no code needed.', es: 'Construye productos reales con palabras — sin saber código.' },
+  t3_count: { en: '3 lessons', es: '3 lecciones' },
+  lrow_1_1: { en: 'What is blockchain?', es: '¿Qué es blockchain?' },
+  ltime_1_1: { en: '3 min · ELI5', es: '3 min · Muy fácil' },
+  lrow_1_2: { en: 'Why BNB Chain for LatAm?', es: '¿Por qué BNB Chain para LatAm?' },
+  ltime_1_2: { en: '3 min · Local context', es: '3 min · Contexto local' },
+  lrow_1_3: { en: 'Set up your first wallet', es: 'Configura tu primera wallet' },
+  ltime_1_3: { en: '5 min · Step by step', es: '5 min · Paso a paso' },
+  lrow_2_1: { en: 'What is AI?', es: '¿Qué es la IA?' },
+  ltime_2_1: { en: '3 min · Easy analogy', es: '3 min · Analogía fácil' },
+  lrow_2_2: { en: 'What are AI Agents?', es: '¿Qué son los Agentes de IA?' },
+  ltime_2_2: { en: '3 min · Easy analogy', es: '3 min · Analogía fácil' },
+  lrow_2_3: { en: 'AI + BNB Chain', es: 'IA + BNB Chain' },
+  ltime_2_3: { en: '4 min · The future', es: '4 min · El futuro' },
+  lrow_3_1: { en: 'What is vibecoding?', es: '¿Qué es el vibecoding?' },
+  ltime_3_1: { en: '3 min · Intro', es: '3 min · Introducción' },
+  lrow_3_2: { en: 'Tools to get started', es: 'Herramientas para empezar' },
+  ltime_3_2: { en: '4 min · Claude, Cursor, Replit', es: '4 min · Claude, Cursor, Replit' },
+  lrow_3_3: { en: 'Your first prompt', es: 'Tu primer prompt' },
+  ltime_3_3: { en: '5 min · Copy and try', es: '5 min · Copia y prueba' },
+  community_btn: { en: '✈️ Join the LatAm Community', es: '✈️ Únete a la comunidad LatAm' },
+  comm_h: { en: 'Community', es: 'Comunidad' },
+  comm_title: { en: '🌎 Join LatAm', es: '🌎 Únete a LatAm' },
+  comm_desc: { en: 'Connect with thousands of LatAm builders, traders, and crypto enthusiasts.', es: 'Conéctate con miles de builders, traders y entusiastas cripto en LatAm.' },
+  back_label: { en: 'Back', es: 'Volver' },
+  btn_complete: { en: '✅ Mark as Complete', es: '✅ Marcar como Completada' },
+  btn_next: { en: 'Next Lesson →', es: 'Siguiente Lección →' },
+  btn_home: { en: '← Back to Home', es: '← Volver al Inicio' },
+  btn_share_x: { en: '𝕏 Share on X', es: '𝕏 Compartir en X' },
+  btn_join_tg: { en: '✈️ Join Community', es: '✈️ Únete a la Comunidad' },
+  done_bar: { en: '✅ Lesson completed! Keep going.', es: '✅ ¡Lección completada! Sigue adelante.' },
+  cert_title: { en: 'Learning Path\nComplete!', es: '¡Learning Path\nCompletado!' },
+  cert_sub: { en: 'You completed all 9 lessons of the BNB Chain LatAm Learning Path. Welcome to Web3! 🚀', es: 'Completaste las 9 lecciones del BNB Chain LatAm Learning Path. ¡Bienvenido/a a Web3! 🚀' },
+  cert_tracks: { en: 'Tracks', es: 'Tracks' },
+  cert_lessons: { en: 'Lessons', es: 'Lecciones' },
+  cert_complete: { en: 'Complete', es: 'Completado' },
+  cert_share_x: { en: 'Share Achievement', es: 'Compartir Logro' },
+  cert_join: { en: 'Join Community', es: 'Unirte a la Comunidad' },
+  cert_home: { en: '← Back to Home', es: '← Volver al Inicio' },
+};
+
+function t(key) { return TX[key] ? (TX[key][LANG] || TX[key].es) : key; }
+
 function setLang(lang) {
-  currentLang = lang;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === lang));
-  document.querySelectorAll('[data-en][data-es]').forEach(el => {
-    el.textContent = el.dataset[lang] || el.textContent;
-  });
-  // Re-render lesson if open
-  if (!document.getElementById('lesson').classList.contains('active')) return;
-  renderLesson(currentTrack, currentLessonIdx);
+  LANG = lang;
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-es').classList.toggle('active', lang === 'es');
+  applyStrings();
+  if (document.getElementById('lesson').classList.contains('active')) {
+    renderLesson(VIEW_TRACK, VIEW_LESSON);
+  }
 }
-function t(en, es) { return currentLang === 'es' ? es : en; }
 
-// ══════════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════════
+function applyStrings() {
+  const ids = ['nav_sub','hero_eyebrow','hero_t1','hero_t2','hero_desc','hero_pl','hero_ps',
+    'tracks_h','t1_name','t1_tag','t1_count','t2_name','t2_tag','t2_count','t3_name','t3_tag','t3_count',
+    'lrow_1_1','ltime_1_1','lrow_1_2','ltime_1_2','lrow_1_3','ltime_1_3',
+    'lrow_2_1','ltime_2_1','lrow_2_2','ltime_2_2','lrow_2_3','ltime_2_3',
+    'lrow_3_1','ltime_3_1','lrow_3_2','ltime_3_2','lrow_3_3','ltime_3_3',
+    'comm_h','comm_title','comm_desc','back_label'];
+  ids.forEach(k => {
+    const el = document.getElementById(k.replace(/_/g,'-'));
+    if (el) el.textContent = t(k);
+  });
+  // special: nav title stays fixed
+  document.getElementById('nav-sub').textContent = t('nav_sub');
+  document.getElementById('hero-eyebrow').textContent = t('hero_eyebrow');
+  document.getElementById('hero-title-line1').textContent = t('hero_t1');
+  document.getElementById('hero-title-line2').textContent = t('hero_t2');
+  document.getElementById('hero-desc').textContent = t('hero_desc');
+  document.getElementById('hero-progress-label').textContent = t('hero_pl');
+  document.getElementById('hero-progress-suffix').textContent = t('hero_ps');
+  document.getElementById('tracks-heading').textContent = t('tracks_h');
+  document.getElementById('t1-name').textContent = t('t1_name');
+  document.getElementById('t1-tag').textContent = t('t1_tag');
+  document.getElementById('t1-count').textContent = t('t1_count');
+  document.getElementById('t2-name').textContent = t('t2_name');
+  document.getElementById('t2-tag').textContent = t('t2_tag');
+  document.getElementById('t2-count').textContent = t('t2_count');
+  document.getElementById('t3-name').textContent = t('t3_name');
+  document.getElementById('t3-tag').textContent = t('t3_tag');
+  document.getElementById('t3-count').textContent = t('t3_count');
+  for (let tr=1;tr<=3;tr++) for (let l=1;l<=3;l++) {
+    const r = document.getElementById('lrow-'+tr+'-'+l);
+    const tm = document.getElementById('ltime-'+tr+'-'+l);
+    if (r) r.textContent = t('lrow_'+tr+'_'+l);
+    if (tm) tm.textContent = t('ltime_'+tr+'_'+l);
+  }
+  for (let tr=1;tr<=3;tr++) {
+    const btn = document.getElementById('t'+tr+'-community-text');
+    if (btn) btn.textContent = t('community_btn').replace('✈️ ','');
+  }
+  document.getElementById('comm-heading').textContent = t('comm_h');
+  document.getElementById('comm-title').textContent = t('comm_title');
+  document.getElementById('comm-desc').textContent = t('comm_desc');
+  document.getElementById('back-label').textContent = t('back_label');
+  // cert
+  document.getElementById('cert-title').innerHTML = t('cert_title').replace('\n','<br>');
+  document.getElementById('cert-sub').textContent = t('cert_sub');
+  document.getElementById('cert-tracks').textContent = t('cert_tracks');
+  document.getElementById('cert-lessons').textContent = t('cert_lessons');
+  document.getElementById('cert-complete').textContent = t('cert_complete');
+  document.getElementById('cert-share-x').textContent = t('cert_share_x');
+  document.getElementById('cert-join').textContent = t('cert_join');
+  document.getElementById('cert-home-btn').textContent = t('cert_home');
+}
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
 function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
 }
-function goHome() { updateHomeProgress(); showView('home'); }
-function openTrack(trackNum) {
-  // Find first incomplete lesson, or last
-  const firstIncomplete = [0,1,2].find(i => !isDone(trackNum, i+1));
-  const idx = firstIncomplete !== undefined ? firstIncomplete : 0;
-  renderLesson(trackNum, idx);
-  showView('lesson');
+function goHome() { updateHomeUI(); showView('home'); }
+
+function toggleTrack(n) {
+  const card = document.getElementById('track-card-'+n);
+  card.classList.toggle('open');
 }
-function openLesson(trackNum, idx) {
-  currentTrack = trackNum;
-  currentLessonIdx = idx;
-  renderLesson(trackNum, idx);
+
+function openLesson(track, lesson) {
+  VIEW_TRACK = track;
+  VIEW_LESSON = lesson;
+  renderLesson(track, lesson);
   showView('lesson');
 }
 
-// ══════════════════════════════════════════════
-// HOME PROGRESS
-// ══════════════════════════════════════════════
-function updateHomeProgress() {
-  document.getElementById('home-progress-pill').textContent = `${countDone()} / 9`;
-  for (let t = 1; t <= 3; t++) {
-    const done = trackDoneCount(t);
-    document.getElementById(`track${t}-bar`).style.width = `${(done/3)*100}%`;
-    for (let l = 1; l <= 3; l++) {
-      const el = document.getElementById(`check-${t}-${l}`);
-      if (el) { el.classList.toggle('done', isDone(t, l)); }
-    }
-    const statusEl = document.getElementById(`track${t}-status`);
-    if (statusEl) {
-      if (done === 0) statusEl.textContent = '';
-      else if (done === 3) statusEl.textContent = t('✅ Complete', '✅ Completado');
-      else statusEl.textContent = t(`${done}/3 done`, `${done}/3 hechas`);
+// ═══════════════════════════════════════
+//  HOME UI
+// ═══════════════════════════════════════
+function updateHomeUI() {
+  document.getElementById('hero-pill').textContent = totalDone() + ' / 9';
+  for (let tr=1;tr<=3;tr++) {
+    const done = trackDone(tr);
+    const pct = Math.round((done/3)*100);
+    document.getElementById('bar-'+tr).style.width = pct + '%';
+    document.getElementById('pct-'+tr).textContent = pct + '%';
+    for (let l=1;l<=3;l++) {
+      const el = document.getElementById('lnum-'+tr+'-'+l);
+      if (!el) continue;
+      if (isDone(tr,l)) {
+        el.classList.add('done');
+      } else {
+        el.classList.remove('done');
+      }
     }
   }
-  // Apply language
-  document.querySelectorAll('[data-en][data-es]').forEach(el => {
-    el.textContent = el.dataset[currentLang] || el.textContent;
-  });
 }
 
-// ══════════════════════════════════════════════
-// LESSON DATA
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════
+//  LESSON DATA
+// ═══════════════════════════════════════
 const LESSONS = {
   '1-1': {
-    en: {
-      title: 'What is Blockchain? (ELI5)',
-      tagline: 'Track 1 · Lesson 1 · BNB Chain Basics 🔗',
-      time: '~5 min read',
-      color: '#F0B90B',
-      body: `
-<h3>🤔 Explain it like I'm 5</h3>
-<p>Imagine a <strong>shared notebook</strong> that millions of people have a copy of. Every time someone writes something in it — "Maria paid Carlos 10 dollars" — that entry is permanent. Nobody can erase it, not even the person who wrote it.</p>
-<p>That notebook is a <strong>blockchain</strong>.</p>
-
-<div class="callout callout-yellow">
-💡 <strong>Key idea:</strong> Blockchain removes the need for a trusted middleman (like a bank). The rules are enforced by code, not a company.
-</div>
-
-<h3>📦 What are "blocks"?</h3>
-<p>Each page of the shared notebook is called a <strong>block</strong>. Every block contains:</p>
-<ul>
-  <li>A list of transactions (who sent what to whom)</li>
-  <li>A timestamp (when it happened)</li>
-  <li>A link to the previous page — that's the <em>chain</em> in blockchain</li>
-</ul>
-
-<h3>🔒 Why is it secure?</h3>
-<p>Because changing one entry would require changing <strong>all the copies</strong> held by millions of computers worldwide. That's practically impossible — and it makes blockchain <strong>tamper-proof</strong>.</p>
-
-<div class="callout callout-blue">
-🌐 Blockchain works because <strong>no single person controls it</strong>. It's decentralized — maintained by thousands of computers around the world.
-</div>
-
-<h3>💰 What can you do with it?</h3>
-<ul>
-  <li><strong>Send money</strong> internationally in seconds, with tiny fees</li>
-  <li><strong>Own digital assets</strong> — no bank can freeze your account</li>
-  <li><strong>Use apps</strong> that run on code (no company can shut them down)</li>
-  <li><strong>Prove ownership</strong> of anything digital — art, games, identity</li>
-</ul>
-
-<div class="callout callout-green">
-✅ <strong>Summary:</strong> Blockchain = a shared, permanent, tamper-proof ledger. No middlemen, no censorship, no single point of failure.
-</div>`,
-      tweet: "Acabo de aprender qué es blockchain con @BNBCHAIN LatAm Learning Path 🔗\n\n¿La idea clave? Una libreta compartida que millones de personas tienen — y nadie puede borrar.\n\n¡Empieza tu ruta gratis! 👇 @stefanocintioli #BNBChain #Web3LatAm #Blockchain"
+    chip: { en: '🔗 Track 1 · Lesson 1', es: '🔗 Track 1 · Lección 1' },
+    chipColor: '#F0B90B', chipBg: '#FEF9E7',
+    title: { en: 'What is Blockchain?', es: '¿Qué es Blockchain?' },
+    time: { en: '3 min · ELI5', es: '3 min · Muy fácil' },
+    headline: {
+      en: 'A shared notebook that nobody can erase.',
+      es: 'Una libreta compartida que nadie puede borrar.'
     },
-    es: {
-      title: '¿Qué es Blockchain? (Muy fácil)',
-      tagline: 'Track 1 · Lección 1 · Fundamentos BNB Chain 🔗',
-      time: '~5 min de lectura',
-      color: '#F0B90B',
-      body: `
-<h3>🤔 Explícalo como si tuviera 5 años</h3>
-<p>Imagina una <strong>libreta compartida</strong> que millones de personas tienen una copia. Cada vez que alguien escribe algo — "María le pagó 10 dólares a Carlos" — esa anotación es permanente. Nadie puede borrarla, ni siquiera quien la escribió.</p>
-<p>Esa libreta es una <strong>blockchain</strong>.</p>
-
-<div class="callout callout-yellow">
-💡 <strong>Idea clave:</strong> Blockchain elimina la necesidad de un intermediario de confianza (como un banco). Las reglas las aplica el código, no una empresa.
-</div>
-
-<h3>📦 ¿Qué son los "bloques"?</h3>
-<p>Cada página de la libreta compartida se llama <strong>bloque</strong>. Cada bloque contiene:</p>
-<ul>
-  <li>Una lista de transacciones (quién envió qué a quién)</li>
-  <li>Un sello de tiempo (cuándo ocurrió)</li>
-  <li>Un enlace a la página anterior — eso es la <em>cadena</em> en blockchain</li>
-</ul>
-
-<h3>🔒 ¿Por qué es seguro?</h3>
-<p>Porque cambiar un registro requeriría cambiar <strong>todas las copias</strong> en millones de computadoras en todo el mundo. Eso es prácticamente imposible — y hace que blockchain sea <strong>a prueba de manipulaciones</strong>.</p>
-
-<div class="callout callout-blue">
-🌐 Blockchain funciona porque <strong>ninguna persona lo controla</strong>. Es descentralizado — mantenido por miles de computadoras en todo el mundo.
-</div>
-
-<h3>💰 ¿Qué puedes hacer con él?</h3>
-<ul>
-  <li><strong>Enviar dinero</strong> internacionalmente en segundos, con comisiones mínimas</li>
-  <li><strong>Poseer activos digitales</strong> — ningún banco puede congelar tu cuenta</li>
-  <li><strong>Usar apps</strong> que funcionan con código (ninguna empresa puede apagarlas)</li>
-  <li><strong>Probar propiedad</strong> de cualquier cosa digital — arte, juegos, identidad</li>
-</ul>
-
-<div class="callout callout-green">
-✅ <strong>Resumen:</strong> Blockchain = una libreta compartida, permanente e inalterable. Sin intermediarios, sin censura, sin un punto único de falla.
-</div>`,
-      tweet: "Acabo de aprender qué es blockchain con @BNBCHAIN LatAm Learning Path 🔗\n\n¿La idea clave? Una libreta compartida que millones de personas tienen — y nadie puede borrar.\n\n¡Empieza tu ruta gratis! 👇 @stefanocintioli #BNBChain #Web3LatAm #Blockchain"
+    bullets: {
+      en: [
+        'Blockchain is a list of transactions stored on thousands of computers worldwide — no single company controls it.',
+        'Once something is written, it\'s permanent. Nobody can delete or edit an entry.',
+        'No bank or middleman needed. The rules are enforced by code.',
+        'You can send money, prove ownership, or run apps — all without asking permission.'
+      ],
+      es: [
+        'Blockchain es una lista de transacciones guardada en miles de computadoras en todo el mundo — ninguna empresa la controla.',
+        'Una vez que algo se escribe, es permanente. Nadie puede borrar ni editar una entrada.',
+        'No se necesita banco ni intermediario. Las reglas las aplica el código.',
+        'Puedes enviar dinero, probar propiedad o usar apps — todo sin pedir permiso.'
+      ]
+    },
+    fact: {
+      en: 'The first blockchain transaction ever was on January 3, 2009 — when Bitcoin\'s creator sent 50 BTC to himself to test the network.',
+      es: 'La primera transacción blockchain de la historia fue el 3 de enero de 2009 — cuando el creador de Bitcoin se envió 50 BTC a sí mismo para probar la red.'
+    },
+    action: {
+      en: 'Think about it: what would you do if you could send money anywhere in the world in 3 seconds, for less than a cent?',
+      es: 'Piénsalo: ¿qué harías si pudieras enviar dinero a cualquier parte del mundo en 3 segundos, por menos de un centavo?'
+    },
+    tweet: {
+      es: `Acabo de aprender qué es blockchain en el BNB Chain LatAm Learning Path 🎓\n\nIdea clave: una libreta compartida que millones de personas tienen — y nadie puede borrar.\n\n@BNBChainLatAm #BNBChain #Web3LatAm\n${SITE_URL}`
     }
   },
   '1-2': {
-    en: {
-      title: 'What is BNB Chain and why LatAm?',
-      tagline: 'Track 1 · Lesson 2 · BNB Chain Basics 🔗',
-      time: '~5 min read',
-      color: '#F0B90B',
-      body: `
-<h3>🌐 BNB Chain in one sentence</h3>
-<p><strong>BNB Chain is one of the fastest, cheapest, and most widely used blockchains in the world</strong> — home to thousands of apps, games, DeFi protocols, and AI tools.</p>
-
-<div class="callout callout-yellow">
-💡 Fun fact: BNB Chain processes more transactions per day than most other blockchains — often over <strong>3 million daily transactions</strong>.
-</div>
-
-<h3>⚡ Why is BNB Chain special?</h3>
-<ul>
-  <li><strong>Speed:</strong> Transactions confirm in ~3 seconds</li>
-  <li><strong>Cost:</strong> Average fee under $0.05 — much cheaper than Ethereum</li>
-  <li><strong>Ecosystem:</strong> Thousands of apps — DeFi, NFTs, GameFi, AI agents</li>
-  <li><strong>EVM Compatible:</strong> All Ethereum tools work on BNB Chain</li>
-</ul>
-
-<h3>🌎 Why is BNB Chain big in LatAm?</h3>
-<p>Latin America faces real financial challenges that blockchain solves directly:</p>
-<ul>
-  <li>📉 <strong>Inflation</strong> — Argentina, Venezuela, and more. People use crypto to protect savings.</li>
-  <li>💸 <strong>Remittances</strong> — Millions send money home. With BNB Chain: seconds, cents in fees.</li>
-  <li>🏦 <strong>Unbanked population</strong> — 40%+ in LatAm don't have a bank account. DeFi fixes this.</li>
-  <li>📱 <strong>Mobile-first</strong> — LatAm skipped desktop banking. Crypto-native mobile apps fit perfectly.</li>
-</ul>
-
-<div class="callout callout-blue">
-🇧🇷🇲🇽🇦🇷 Countries like Brazil, Mexico, Argentina and Colombia are among the fastest-growing crypto markets on the planet. BNB Chain is the leading platform for adoption in LatAm.
-</div>
-
-<h3>🔧 What's built on BNB Chain?</h3>
-<ul>
-  <li><strong>PancakeSwap</strong> — One of the biggest DEXs in the world</li>
-  <li><strong>Venus Protocol</strong> — DeFi lending for everyone</li>
-  <li><strong>BNB AI Ecosystem</strong> — AI agents that interact with the chain</li>
-  <li><strong>BNB Greenfield</strong> — Decentralized storage</li>
-</ul>
-
-<div class="callout callout-green">
-✅ <strong>Summary:</strong> BNB Chain = fast, cheap, powerful blockchain. LatAm = perfect fit because of inflation, remittances, and unbanked users.
-</div>`,
-      tweet: "Aprendí por qué @BNBCHAIN es la blockchain más relevante para LatAm 🌎\n\nInflación, remesas, población sin banco... BNB Chain resuelve todo esto con transacciones en 3 segundos y fees de centavos.\n\n¡Únete a la ruta! 👇 @stefanocintioli #BNBChain #Web3LatAm"
+    chip: { en: '🔗 Track 1 · Lesson 2', es: '🔗 Track 1 · Lección 2' },
+    chipColor: '#F0B90B', chipBg: '#FEF9E7',
+    title: { en: 'Why BNB Chain for LatAm?', es: '¿Por qué BNB Chain para LatAm?' },
+    time: { en: '3 min · Local context', es: '3 min · Contexto local' },
+    headline: {
+      en: 'Fast, cheap, and built for the real world.',
+      es: 'Rápida, barata y hecha para el mundo real.'
     },
-    es: {
-      title: '¿Qué es BNB Chain y por qué LatAm?',
-      tagline: 'Track 1 · Lección 2 · Fundamentos BNB Chain 🔗',
-      time: '~5 min de lectura',
-      color: '#F0B90B',
-      body: `
-<h3>🌐 BNB Chain en una frase</h3>
-<p><strong>BNB Chain es una de las blockchains más rápidas, baratas y usadas del mundo</strong> — hogar de miles de apps, juegos, protocolos DeFi y herramientas de IA.</p>
-
-<div class="callout callout-yellow">
-💡 Dato curioso: BNB Chain procesa más transacciones por día que la mayoría de blockchains — frecuentemente más de <strong>3 millones de transacciones diarias</strong>.
-</div>
-
-<h3>⚡ ¿Por qué es especial BNB Chain?</h3>
-<ul>
-  <li><strong>Velocidad:</strong> Las transacciones confirman en ~3 segundos</li>
-  <li><strong>Costo:</strong> Comisión promedio menor a $0.05 — mucho más barato que Ethereum</li>
-  <li><strong>Ecosistema:</strong> Miles de apps — DeFi, NFTs, GameFi, agentes de IA</li>
-  <li><strong>Compatible con EVM:</strong> Todas las herramientas de Ethereum funcionan en BNB Chain</li>
-</ul>
-
-<h3>🌎 ¿Por qué BNB Chain es grande en LatAm?</h3>
-<p>Latinoamérica enfrenta desafíos financieros reales que blockchain resuelve directamente:</p>
-<ul>
-  <li>📉 <strong>Inflación</strong> — Argentina, Venezuela y más. La gente usa cripto para proteger sus ahorros.</li>
-  <li>💸 <strong>Remesas</strong> — Millones envían dinero a casa. Con BNB Chain: segundos, centavos de comisión.</li>
-  <li>🏦 <strong>Población sin banco</strong> — Más del 40% en LatAm no tiene cuenta bancaria. DeFi lo soluciona.</li>
-  <li>📱 <strong>Mobile-first</strong> — LatAm saltó la banca de escritorio. Las apps móviles cripto-nativas encajan perfecto.</li>
-</ul>
-
-<div class="callout callout-blue">
-🇧🇷🇲🇽🇦🇷 Países como Brasil, México, Argentina y Colombia están entre los mercados cripto de más rápido crecimiento del planeta. BNB Chain es la plataforma líder para adopción en LatAm.
-</div>
-
-<h3>🔧 ¿Qué se construye en BNB Chain?</h3>
-<ul>
-  <li><strong>PancakeSwap</strong> — Uno de los DEXs más grandes del mundo</li>
-  <li><strong>Venus Protocol</strong> — Préstamos DeFi para todos</li>
-  <li><strong>Ecosistema BNB AI</strong> — Agentes de IA que interactúan con la cadena</li>
-  <li><strong>BNB Greenfield</strong> — Almacenamiento descentralizado</li>
-</ul>
-
-<div class="callout callout-green">
-✅ <strong>Resumen:</strong> BNB Chain = blockchain rápida, barata y poderosa. LatAm = ajuste perfecto por inflación, remesas y usuarios sin banco.
-</div>`,
-      tweet: "Aprendí por qué @BNBCHAIN es la blockchain más relevante para LatAm 🌎\n\nInflación, remesas, población sin banco... BNB Chain resuelve todo esto con transacciones en 3 segundos y fees de centavos.\n\n¡Únete a la ruta! 👇 @stefanocintioli #BNBChain #Web3LatAm"
+    bullets: {
+      en: [
+        'BNB Chain confirms transactions in ~3 seconds. Average fee: less than $0.05.',
+        'In LatAm, 40%+ of people don\'t have a bank account. BNB Chain is open to everyone.',
+        'Millions send remittances home every month. With BNB Chain: seconds, not days — and cents, not percentages.',
+        'Inflation is destroying savings in Argentina, Venezuela, and more. Crypto is a real hedge.'
+      ],
+      es: [
+        'BNB Chain confirma transacciones en ~3 segundos. Comisión promedio: menos de $0.05.',
+        'En LatAm, más del 40% de las personas no tienen cuenta bancaria. BNB Chain está abierta para todos.',
+        'Millones envían remesas cada mes. Con BNB Chain: segundos, no días — y centavos, no porcentajes.',
+        'La inflación destruye ahorros en Argentina, Venezuela y más. Cripto es una cobertura real.'
+      ]
+    },
+    fact: {
+      en: 'Brazil, Mexico, Argentina, and Colombia are 4 of the top 20 countries in the world for crypto adoption. BNB Chain is the leading platform for all of them.',
+      es: 'Brasil, México, Argentina y Colombia son 4 de los 20 países del mundo con mayor adopción cripto. BNB Chain es la plataforma líder en todos ellos.'
+    },
+    action: {
+      en: 'Next time you see a 5% fee on a money transfer, remember: BNB Chain does it for $0.05.',
+      es: 'La próxima vez que veas una comisión del 5% en una transferencia, recuerda: BNB Chain lo hace por $0.05.'
+    },
+    tweet: {
+      es: `Acabo de aprender por qué BNB Chain es la blockchain más relevante para LatAm 🎓\n\nRemesas, inflación, población sin banco — @BNBCHAIN resuelve todo esto con fees de centavos.\n\n@BNBChainLatAm #BNBChain #Web3LatAm\n${SITE_URL}`
     }
   },
   '1-3': {
-    en: {
-      title: 'Your First Wallet — Set Up MetaMask',
-      tagline: 'Track 1 · Lesson 3 · BNB Chain Basics 🔗',
-      time: '~7 min read',
-      color: '#F0B90B',
-      body: `
-<h3>🦊 What is MetaMask?</h3>
-<p>MetaMask is a <strong>crypto wallet</strong> — like a bank account, but you control it completely. No company can freeze it, no approval needed to open one. It lives in your browser or on your phone.</p>
-
-<div class="callout callout-yellow">
-🔑 Your wallet = your identity in Web3. Your private key = the master password. <strong>Never share it with anyone.</strong>
-</div>
-
-<h3>📲 Step-by-step: Install MetaMask</h3>
-<div class="step-block"><div class="step-num">1</div><div class="step-text">Go to <strong><a href="https://metamask.io/download" target="_blank" rel="noopener">metamask.io/download</a></strong> and install the browser extension (Chrome, Firefox, Brave) or the mobile app.</div></div>
-<div class="step-block"><div class="step-num">2</div><div class="step-text">Click <strong>"Create a new wallet"</strong>. Create a strong password — this protects your wallet on this device.</div></div>
-<div class="step-block"><div class="step-num">3</div><div class="step-text"><strong>Write down your Secret Recovery Phrase</strong> (12 words). This is your master key. Store it offline — paper, not a screenshot. If you lose this, you lose your wallet forever.</div></div>
-<div class="step-block"><div class="step-num">4</div><div class="step-text">Confirm your recovery phrase by entering the words in the correct order. Done — your wallet is created!</div></div>
-
-<h3>⛓️ Add BNB Chain Network</h3>
-<p>By default MetaMask connects to Ethereum. Add BNB Chain in one click:</p>
-<div class="step-block"><div class="step-num">1</div><div class="step-text">Go to <strong><a href="https://chainlist.org" target="_blank" rel="noopener">chainlist.org</a></strong> and search for <strong>"BNB Chain"</strong>.</div></div>
-<div class="step-block"><div class="step-num">2</div><div class="step-text">Click <strong>"Add to MetaMask"</strong> and confirm in the popup. That's it — you're now on BNB Chain.</div></div>
-<div class="step-block"><div class="step-num">3</div><div class="step-text">Alternatively: in MetaMask, click the network dropdown → "Add network" → enter these manually:</div></div>
-
-<div class="code-block">Network Name: BNB Smart Chain
-RPC URL:      https://bsc-dataseed.binance.org/
-Chain ID:     56
-Symbol:       BNB
-Explorer:     https://bscscan.com</div>
-
-<h3>🔐 Security essentials</h3>
-<ul>
-  <li>✅ Write your seed phrase on paper, store it safely</li>
-  <li>✅ Never enter your seed phrase on any website</li>
-  <li>✅ Use a hardware wallet for large amounts (Ledger, Trezor)</li>
-  <li>❌ Never share your private key with anyone, ever</li>
-  <li>❌ Beware of fake MetaMask websites — always go to metamask.io</li>
-</ul>
-
-<div class="callout callout-green">
-🎉 <strong>You now have a Web3 wallet on BNB Chain!</strong> This is your first step into owning your financial future. Track 1 complete!
-</div>`,
-      tweet: "✅ Completé el Track 1 del @BNBCHAIN LatAm Learning Path!\n\nYa sé qué es blockchain, por qué BNB Chain domina en LatAm, ¡y configuré mi primera wallet! 🦊\n\n3 lecciones = base sólida en Web3 🚀 @stefanocintioli #BNBChain #MetaMask #Web3LatAm"
+    chip: { en: '🔗 Track 1 · Lesson 3', es: '🔗 Track 1 · Lección 3' },
+    chipColor: '#F0B90B', chipBg: '#FEF9E7',
+    title: { en: 'Set Up Your First Wallet', es: 'Configura Tu Primera Wallet' },
+    time: { en: '5 min · Step by step', es: '5 min · Paso a paso' },
+    headline: {
+      en: 'MetaMask is your passport to Web3 — and takes 5 minutes to set up.',
+      es: 'MetaMask es tu pasaporte a Web3 — y se configura en 5 minutos.'
     },
-    es: {
-      title: 'Tu Primera Wallet — Configura MetaMask',
-      tagline: 'Track 1 · Lección 3 · Fundamentos BNB Chain 🔗',
-      time: '~7 min de lectura',
-      color: '#F0B90B',
-      body: `
-<h3>🦊 ¿Qué es MetaMask?</h3>
-<p>MetaMask es una <strong>wallet cripto</strong> — como una cuenta bancaria, pero tú la controlas completamente. Ninguna empresa puede congelarla, no necesitas aprobación para abrir una. Vive en tu navegador o en tu teléfono.</p>
-
-<div class="callout callout-yellow">
-🔑 Tu wallet = tu identidad en Web3. Tu clave privada = la contraseña maestra. <strong>Nunca la compartas con nadie.</strong>
-</div>
-
-<h3>📲 Paso a paso: Instala MetaMask</h3>
-<div class="step-block"><div class="step-num">1</div><div class="step-text">Ve a <strong><a href="https://metamask.io/download" target="_blank" rel="noopener">metamask.io/download</a></strong> e instala la extensión del navegador (Chrome, Firefox, Brave) o la app móvil.</div></div>
-<div class="step-block"><div class="step-num">2</div><div class="step-text">Haz clic en <strong>"Crear una nueva wallet"</strong>. Crea una contraseña fuerte — esto protege tu wallet en este dispositivo.</div></div>
-<div class="step-block"><div class="step-num">3</div><div class="step-text"><strong>Anota tu Frase de Recuperación Secreta</strong> (12 palabras). Esta es tu llave maestra. Guárdala offline — en papel, no como captura de pantalla. Si la pierdes, pierdes tu wallet para siempre.</div></div>
-<div class="step-block"><div class="step-num">4</div><div class="step-text">Confirma tu frase de recuperación ingresando las palabras en el orden correcto. ¡Listo — tu wallet está creada!</div></div>
-
-<h3>⛓️ Agregar la Red BNB Chain</h3>
-<p>Por defecto MetaMask se conecta a Ethereum. Agrega BNB Chain con un clic:</p>
-<div class="step-block"><div class="step-num">1</div><div class="step-text">Ve a <strong><a href="https://chainlist.org" target="_blank" rel="noopener">chainlist.org</a></strong> y busca <strong>"BNB Chain"</strong>.</div></div>
-<div class="step-block"><div class="step-num">2</div><div class="step-text">Haz clic en <strong>"Agregar a MetaMask"</strong> y confirma en el popup. Listo — ya estás en BNB Chain.</div></div>
-<div class="step-block"><div class="step-num">3</div><div class="step-text">Alternativamente: en MetaMask, haz clic en el selector de red → "Agregar red" → ingresa estos datos manualmente:</div></div>
-
-<div class="code-block">Nombre de Red: BNB Smart Chain
-URL RPC:       https://bsc-dataseed.binance.org/
-Chain ID:      56
-Símbolo:       BNB
-Explorador:    https://bscscan.com</div>
-
-<h3>🔐 Seguridad esencial</h3>
-<ul>
-  <li>✅ Escribe tu seed phrase en papel y guárdala de forma segura</li>
-  <li>✅ Nunca ingreses tu seed phrase en ningún sitio web</li>
-  <li>✅ Usa una hardware wallet para grandes cantidades (Ledger, Trezor)</li>
-  <li>❌ Nunca compartas tu clave privada con nadie, nunca</li>
-  <li>❌ Cuidado con sitios web falsos de MetaMask — siempre ve a metamask.io</li>
-</ul>
-
-<div class="callout callout-green">
-🎉 <strong>¡Ya tienes una wallet Web3 en BNB Chain!</strong> Este es tu primer paso hacia controlar tu futuro financiero. ¡Track 1 completado!
-</div>`,
-      tweet: "✅ Completé el Track 1 del @BNBCHAIN LatAm Learning Path!\n\nYa sé qué es blockchain, por qué BNB Chain domina en LatAm, ¡y configuré mi primera wallet! 🦊\n\n3 lecciones = base sólida en Web3 🚀 @stefanocintioli #BNBChain #MetaMask #Web3LatAm"
+    steps: {
+      en: [
+        ['Go to metamask.io', 'Download the browser extension (Chrome/Firefox/Brave) or the mobile app. Always use the official site.'],
+        ['Create a new wallet', 'Click "Create a new wallet" and choose a strong password for this device.'],
+        ['Write your Secret Phrase', 'MetaMask gives you 12 words. Write them on paper and store safely. This is your master key — lose it and you lose everything.'],
+        ['Confirm the phrase', 'Re-enter the words in order to confirm. Done — your wallet exists.'],
+        ['Add BNB Chain', 'Go to chainlist.org, search "BNB Smart Chain", click "Add to MetaMask". Now you\'re on BNB Chain.'],
+      ],
+      es: [
+        ['Ve a metamask.io', 'Descarga la extensión para navegador (Chrome/Firefox/Brave) o la app móvil. Usa siempre el sitio oficial.'],
+        ['Crea una nueva wallet', 'Haz clic en "Crear una nueva wallet" y elige una contraseña segura para este dispositivo.'],
+        ['Escribe tu Frase Secreta', 'MetaMask te da 12 palabras. Escríbelas en papel y guárdalas en un lugar seguro. Es tu llave maestra — piérdela y pierdes todo.'],
+        ['Confirma la frase', 'Vuelve a ingresar las palabras en orden para confirmar. Listo — tu wallet existe.'],
+        ['Agrega BNB Chain', 'Ve a chainlist.org, busca "BNB Smart Chain", haz clic en "Add to MetaMask". Ahora estás en BNB Chain.'],
+      ]
+    },
+    fact: {
+      en: 'Your wallet address is public — like a bank account number. Your private key (and seed phrase) is secret — like the PIN. Never share the private key or seed phrase with anyone, ever.',
+      es: 'Tu dirección de wallet es pública — como un número de cuenta bancaria. Tu clave privada (y seed phrase) es secreta — como el PIN. Nunca compartas la clave privada ni la seed phrase con nadie, jamás.'
+    },
+    action: {
+      en: 'Action: Open metamask.io right now and set up your wallet. It takes 5 minutes.',
+      es: 'Acción: Abre metamask.io ahora mismo y configura tu wallet. Son 5 minutos.'
+    },
+    actionLink: { text: 'metamask.io', url: 'https://metamask.io' },
+    tweet: {
+      es: `✅ Completé el Track 1 del BNB Chain LatAm Learning Path 🎓\n\nYa sé qué es blockchain, por qué BNB Chain domina en LatAm, y configuré mi primera wallet MetaMask 🦊\n\n@BNBChainLatAm #BNBChain #MetaMask #Web3LatAm\n${SITE_URL}`
     }
   },
   '2-1': {
-    en: {
-      title: 'What is AI and Why It Matters for Web3?',
-      tagline: 'Track 2 · Lesson 1 · AI & The Future 🤖',
-      time: '~5 min read',
-      color: '#9B59B6',
-      body: `
-<h3>🧠 AI in simple terms</h3>
-<p><strong>Artificial Intelligence (AI)</strong> is software that can learn from data and make decisions — without being explicitly programmed for every situation. It can write text, analyze images, code apps, translate languages, and much more.</p>
-
-<div class="callout callout-purple">
-🤖 Think of AI like a very fast assistant that has read millions of books and can answer almost any question — instantly, 24/7.
-</div>
-
-<h3>📈 Why is AI exploding right now?</h3>
-<ul>
-  <li><strong>ChatGPT</strong> reached 100 million users in 2 months — fastest in history</li>
-  <li><strong>Large Language Models (LLMs)</strong> can now write code, generate images, analyze data</li>
-  <li>Computing power and training data have reached a tipping point</li>
-  <li>The cost of AI is dropping every month — soon it's free for everyone</li>
-</ul>
-
-<h3>🔗 Why does AI matter for Web3?</h3>
-<p>AI and blockchain are the two most transformative technologies of our decade. Together they create:</p>
-<ul>
-  <li>🤖 <strong>AI Agents</strong> that can hold wallets and transact autonomously on-chain</li>
-  <li>🔍 <strong>On-chain analytics</strong> — AI reading blockchain data to detect fraud or find opportunities</li>
-  <li>🎮 <strong>AI-powered games</strong> with dynamic characters that own in-game assets</li>
-  <li>🏦 <strong>Autonomous DeFi</strong> — AI managing portfolios without human intervention</li>
-</ul>
-
-<div class="callout callout-blue">
-💡 In LatAm, AI tools are especially powerful because they lower the barrier to entry. You don't need to code or have capital — just a good idea and the right prompt.
-</div>
-
-<h3>🚀 What's coming?</h3>
-<p>We're moving from <em>"AI as a tool"</em> to <em>"AI as an agent"</em> — entities that can take actions in the real world (and on-chain) on your behalf. The combination of AI + BNB Chain unlocks entirely new economic opportunities for LatAm.</p>
-
-<div class="callout callout-green">
-✅ <strong>Summary:</strong> AI = machines that learn. Web3 + AI = autonomous agents that can hold assets, execute transactions, and create value for you.
-</div>`,
-      tweet: "Acabo de aprender por qué IA + Web3 es la combinación más poderosa del momento 🤖🔗\n\nCon @BNBCHAIN los agentes de IA pueden tener wallets, hacer transacciones y crear valor de forma autónoma.\n\n¡Únete al Learning Path! 👇 @stefanocintioli #BNBChain #AIWeb3 #Web3LatAm"
+    chip: { en: '🤖 Track 2 · Lesson 1', es: '🤖 Track 2 · Lección 1' },
+    chipColor: '#7C3AED', chipBg: '#F3F0FF',
+    title: { en: 'What is AI?', es: '¿Qué es la IA?' },
+    time: { en: '3 min · Easy analogy', es: '3 min · Analogía fácil' },
+    headline: {
+      en: 'Imagine a very fast intern who has read everything ever written.',
+      es: 'Imagina un pasante muy rápido que ha leído todo lo que se ha escrito.'
     },
-    es: {
-      title: '¿Qué es la IA y por qué importa en Web3?',
-      tagline: 'Track 2 · Lección 1 · IA & El Futuro 🤖',
-      time: '~5 min de lectura',
-      color: '#9B59B6',
-      body: `
-<h3>🧠 IA en términos simples</h3>
-<p><strong>La Inteligencia Artificial (IA)</strong> es software que puede aprender de datos y tomar decisiones — sin ser programado explícitamente para cada situación. Puede escribir texto, analizar imágenes, programar apps, traducir idiomas y mucho más.</p>
-
-<div class="callout callout-purple">
-🤖 Piensa en la IA como un asistente muy rápido que ha leído millones de libros y puede responder casi cualquier pregunta — instantáneamente, 24/7.
-</div>
-
-<h3>📈 ¿Por qué la IA está explotando ahora?</h3>
-<ul>
-  <li><strong>ChatGPT</strong> alcanzó 100 millones de usuarios en 2 meses — el más rápido en la historia</li>
-  <li><strong>Los modelos de lenguaje (LLMs)</strong> ya pueden escribir código, generar imágenes y analizar datos</li>
-  <li>La capacidad de cómputo y los datos de entrenamiento han llegado a un punto de inflexión</li>
-  <li>El costo de la IA baja cada mes — pronto será gratis para todos</li>
-</ul>
-
-<h3>🔗 ¿Por qué importa la IA para Web3?</h3>
-<p>La IA y blockchain son las dos tecnologías más transformadoras de nuestra década. Juntas crean:</p>
-<ul>
-  <li>🤖 <strong>Agentes de IA</strong> que pueden tener wallets y hacer transacciones on-chain de forma autónoma</li>
-  <li>🔍 <strong>Análisis on-chain</strong> — IA leyendo datos de blockchain para detectar fraudes u oportunidades</li>
-  <li>🎮 <strong>Juegos impulsados por IA</strong> con personajes dinámicos que poseen activos del juego</li>
-  <li>🏦 <strong>DeFi Autónomo</strong> — IA gestionando portfolios sin intervención humana</li>
-</ul>
-
-<div class="callout callout-blue">
-💡 En LatAm, las herramientas de IA son especialmente poderosas porque bajan la barrera de entrada. No necesitas saber programar ni tener capital — solo una buena idea y el prompt correcto.
-</div>
-
-<h3>🚀 ¿Qué viene?</h3>
-<p>Estamos pasando de <em>"IA como herramienta"</em> a <em>"IA como agente"</em> — entidades que pueden tomar acciones en el mundo real (y on-chain) en tu nombre. La combinación de IA + BNB Chain abre oportunidades económicas completamente nuevas para LatAm.</p>
-
-<div class="callout callout-green">
-✅ <strong>Resumen:</strong> IA = máquinas que aprenden. Web3 + IA = agentes autónomos que pueden tener activos, ejecutar transacciones y crear valor para ti.
-</div>`,
-      tweet: "Acabo de aprender por qué IA + Web3 es la combinación más poderosa del momento 🤖🔗\n\nCon @BNBCHAIN los agentes de IA pueden tener wallets, hacer transacciones y crear valor de forma autónoma.\n\n¡Únete al Learning Path! 👇 @stefanocintioli #BNBChain #AIWeb3 #Web3LatAm"
+    bullets: {
+      en: [
+        'AI is software that learns from data and can answer questions, write text, generate images, and write code.',
+        'It doesn\'t follow fixed rules — it figures out what to do based on patterns it learned.',
+        'Modern AI (like ChatGPT or Claude) can understand and speak Spanish perfectly.',
+        'The cost of AI is dropping fast. What costs thousands today will be free in two years.'
+      ],
+      es: [
+        'La IA es software que aprende de datos y puede responder preguntas, escribir texto, generar imágenes y escribir código.',
+        'No sigue reglas fijas — descubre qué hacer basándose en patrones que aprendió.',
+        'La IA moderna (como ChatGPT o Claude) puede entender y hablar español perfectamente.',
+        'El costo de la IA baja rápido. Lo que hoy cuesta miles, en dos años será gratis.'
+      ]
+    },
+    fact: {
+      en: 'ChatGPT reached 100 million users in just 2 months — the fastest product adoption in history. For comparison, Instagram took 2.5 years.',
+      es: 'ChatGPT alcanzó 100 millones de usuarios en solo 2 meses — la adopción de producto más rápida de la historia. Para comparar, Instagram tardó 2.5 años.'
+    },
+    action: {
+      en: 'Try it right now: go to claude.ai and type "Explain blockchain to a 10-year-old in Spanish." See what happens.',
+      es: 'Pruébalo ahora: ve a claude.ai y escribe "Explica blockchain a un niño de 10 años en español." Mira qué pasa.'
+    },
+    actionLink: { text: 'claude.ai', url: 'https://claude.ai' },
+    tweet: {
+      es: `Acabo de aprender qué es la IA en el BNB Chain LatAm Learning Path 🎓\n\nIdea clave: un pasante muy rápido que leyó todo lo que existe — y responde en segundos.\n\n@BNBChainLatAm #BNBChain #AIWeb3 #Web3LatAm\n${SITE_URL}`
     }
   },
   '2-2': {
-    en: {
-      title: 'What are AI Agents?',
-      tagline: 'Track 2 · Lesson 2 · AI & The Future 🤖',
-      time: '~5 min read',
-      color: '#9B59B6',
-      body: `
-<h3>🤖 The simple analogy</h3>
-<p>Think of a <strong>chatbot</strong> as someone who can answer questions. Now imagine that same system can also <em>take actions</em> — book appointments, send emails, execute trades, deploy code, and interact with blockchain protocols. That's an <strong>AI Agent</strong>.</p>
-
-<div class="callout callout-purple">
-🧠 <strong>AI Agent = AI that can perceive its environment, make decisions, and take actions autonomously.</strong> It doesn't just answer — it does.
-</div>
-
-<h3>🏠 Real-world analogies</h3>
-<ul>
-  <li><strong>Smart thermostat:</strong> perceives temperature, decides to heat/cool, takes action — that's a simple agent</li>
-  <li><strong>Self-driving car:</strong> perceives road, decides route, drives — complex agent</li>
-  <li><strong>AI trading bot:</strong> reads market data, decides to buy/sell, executes on-chain — AI agent in Web3</li>
-</ul>
-
-<h3>🔗 AI Agents in Web3</h3>
-<p>When AI agents connect to blockchain, they can:</p>
-<ul>
-  <li>💰 <strong>Own a wallet</strong> — hold and send crypto autonomously</li>
-  <li>📊 <strong>Manage DeFi positions</strong> — yield farming, liquidity, lending without human action</li>
-  <li>🎯 <strong>Execute strategies</strong> — "buy BNB when price drops 5%, sell when it rises 10%"</li>
-  <li>🤝 <strong>Interact with smart contracts</strong> — call any on-chain function programmatically</li>
-  <li>📝 <strong>Create content + monetize</strong> — an agent that writes, posts, and earns tokens</li>
-</ul>
-
-<div class="callout callout-blue">
-💡 <strong>BNB Chain AI Narrative:</strong> BNB Chain is positioning itself as the home of AI agents. The infrastructure is fast enough and cheap enough to make autonomous on-chain actions practical and affordable.
-</div>
-
-<h3>⚡ The agent economy is coming</h3>
-<p>In the near future, most on-chain activity will be driven by agents, not humans directly. Agents will trade, govern, create, and interact 24/7 — with humans setting the goals and collecting the rewards.</p>
-
-<div class="callout callout-green">
-✅ <strong>Summary:</strong> AI Agents are AI that take actions. In Web3, they hold wallets, execute transactions, and run autonomously on BNB Chain — 24/7.
-</div>`,
-      tweet: "¡Los Agentes de IA son el futuro de Web3! 🤖⛓️\n\nImagina una IA que puede tener una wallet, hacer transacciones y gestionar DeFi de forma autónoma en @BNBCHAIN.\n\n¡No es ciencia ficción — está pasando ahora! 🚀 @stefanocintioli #AIAgents #BNBChain #Web3LatAm"
+    chip: { en: '🤖 Track 2 · Lesson 2', es: '🤖 Track 2 · Lección 2' },
+    chipColor: '#7C3AED', chipBg: '#F3F0FF',
+    title: { en: 'What are AI Agents?', es: '¿Qué son los Agentes de IA?' },
+    time: { en: '3 min · Easy analogy', es: '3 min · Analogía fácil' },
+    headline: {
+      en: 'A robot assistant that works 24/7 while you sleep.',
+      es: 'Un asistente robot que trabaja 24/7 mientras duermes.'
     },
-    es: {
-      title: '¿Qué son los Agentes de IA?',
-      tagline: 'Track 2 · Lección 2 · IA & El Futuro 🤖',
-      time: '~5 min de lectura',
-      color: '#9B59B6',
-      body: `
-<h3>🤖 La analogía simple</h3>
-<p>Piensa en un <strong>chatbot</strong> como alguien que puede responder preguntas. Ahora imagina que ese mismo sistema también puede <em>tomar acciones</em> — reservar citas, enviar emails, ejecutar trades, desplegar código e interactuar con protocolos blockchain. Eso es un <strong>Agente de IA</strong>.</p>
-
-<div class="callout callout-purple">
-🧠 <strong>Agente de IA = IA que puede percibir su entorno, tomar decisiones y actuar de forma autónoma.</strong> No solo responde — hace.
-</div>
-
-<h3>🏠 Analogías del mundo real</h3>
-<ul>
-  <li><strong>Termostato inteligente:</strong> percibe la temperatura, decide calentar/enfriar, actúa — eso es un agente simple</li>
-  <li><strong>Auto sin conductor:</strong> percibe la carretera, decide la ruta, maneja — agente complejo</li>
-  <li><strong>Bot de trading con IA:</strong> lee datos del mercado, decide comprar/vender, ejecuta on-chain — agente de IA en Web3</li>
-</ul>
-
-<h3>🔗 Agentes de IA en Web3</h3>
-<p>Cuando los agentes de IA se conectan a blockchain, pueden:</p>
-<ul>
-  <li>💰 <strong>Tener una wallet</strong> — poseer y enviar cripto de forma autónoma</li>
-  <li>📊 <strong>Gestionar posiciones DeFi</strong> — yield farming, liquidez, préstamos sin acción humana</li>
-  <li>🎯 <strong>Ejecutar estrategias</strong> — "compra BNB cuando el precio baje 5%, vende cuando suba 10%"</li>
-  <li>🤝 <strong>Interactuar con contratos inteligentes</strong> — llamar cualquier función on-chain programáticamente</li>
-  <li>📝 <strong>Crear contenido y monetizar</strong> — un agente que escribe, publica y gana tokens</li>
-</ul>
-
-<div class="callout callout-blue">
-💡 <strong>Narrativa IA de BNB Chain:</strong> BNB Chain se posiciona como el hogar de los agentes de IA. La infraestructura es lo suficientemente rápida y barata para hacer que las acciones autónomas on-chain sean prácticas y asequibles.
-</div>
-
-<h3>⚡ La economía de agentes está llegando</h3>
-<p>En el futuro cercano, la mayoría de la actividad on-chain será impulsada por agentes, no directamente por humanos. Los agentes comerciarán, gobernarán, crearán e interactuarán 24/7 — con los humanos estableciendo los objetivos y recogiendo las recompensas.</p>
-
-<div class="callout callout-green">
-✅ <strong>Resumen:</strong> Los Agentes de IA toman acciones. En Web3, tienen wallets, ejecutan transacciones y operan de forma autónoma en BNB Chain — 24/7.
-</div>`,
-      tweet: "¡Los Agentes de IA son el futuro de Web3! 🤖⛓️\n\nImagina una IA que puede tener una wallet, hacer transacciones y gestionar DeFi de forma autónoma en @BNBCHAIN.\n\n¡No es ciencia ficción — está pasando ahora! 🚀 @stefanocintioli #AIAgents #BNBChain #Web3LatAm"
+    bullets: {
+      en: [
+        'A chatbot answers questions. An AI Agent takes actions — it books, sends, executes, builds.',
+        'AI Agents can have wallets, hold crypto, and send transactions on-chain autonomously.',
+        'You set the goal. The agent figures out how to achieve it and does it — step by step.',
+        'BNB Chain is positioning itself as the home of AI agents: fast, cheap, and powerful enough for autonomous on-chain activity.'
+      ],
+      es: [
+        'Un chatbot responde preguntas. Un Agente de IA toma acciones — reserva, envía, ejecuta, construye.',
+        'Los Agentes de IA pueden tener wallets, guardar cripto y enviar transacciones on-chain de forma autónoma.',
+        'Tú defines el objetivo. El agente descubre cómo lograrlo y lo hace — paso a paso.',
+        'BNB Chain se posiciona como el hogar de los agentes de IA: rápida, barata y suficientemente poderosa para actividad autónoma on-chain.'
+      ]
+    },
+    fact: {
+      en: 'In 2025, AI agents started opening their own bank-like accounts and making real financial transactions — without a human pressing "confirm."',
+      es: 'En 2025, los agentes de IA empezaron a abrir sus propias cuentas tipo bancario y hacer transacciones financieras reales — sin que un humano presionara "confirmar".'
+    },
+    action: {
+      en: 'Think of one repetitive financial task you do (check prices, send a payment, track a portfolio). An AI agent could do that for you, automatically, on BNB Chain.',
+      es: 'Piensa en una tarea financiera repetitiva que haces (verificar precios, enviar un pago, seguir un portfolio). Un agente de IA podría hacerlo por ti, automáticamente, en BNB Chain.'
+    },
+    tweet: {
+      es: `Aprendí qué son los Agentes de IA en el BNB Chain LatAm Learning Path 🎓\n\nImagina un asistente que trabaja 24/7, tiene su propia wallet y ejecuta transacciones en @BNBCHAIN — solo.\n\n@BNBChainLatAm #AIAgents #BNBChain #Web3LatAm\n${SITE_URL}`
     }
   },
   '2-3': {
-    en: {
-      title: 'MCP + BNB Chain — AI Connects to Blockchain',
-      tagline: 'Track 2 · Lesson 3 · AI & The Future 🤖',
-      time: '~6 min read',
-      color: '#9B59B6',
-      body: `
-<h3>🔌 What is MCP?</h3>
-<p><strong>Model Context Protocol (MCP)</strong> is an open standard that lets AI models connect to external tools, data sources, and services — including blockchain networks like BNB Chain.</p>
-<p>Think of it as a <strong>universal plugin system for AI</strong>. Just like your phone has apps for different things, MCP lets AI assistants use "apps" — including on-chain tools.</p>
-
-<div class="callout callout-purple">
-🔗 MCP = the bridge between AI brains and the real world (and Web3). It's what turns a chatbot into an agent that can actually do things on-chain.
-</div>
-
-<h3>⚡ BNB Chain + MCP in practice</h3>
-<p>With the <strong>BNB Chain MCP server</strong>, an AI agent can:</p>
-<ul>
-  <li>📊 <strong>Read blockchain data</strong> — check balances, transactions, contract state</li>
-  <li>💸 <strong>Send transactions</strong> — transfer tokens, interact with smart contracts</li>
-  <li>🪙 <strong>Deploy contracts</strong> — create new tokens or DeFi protocols via natural language</li>
-  <li>🔍 <strong>Query DeFi protocols</strong> — get live prices, liquidity, yields</li>
-  <li>🤖 <strong>Register as an on-chain AI agent</strong> — using ERC-8004 standard</li>
-</ul>
-
-<div class="callout callout-blue">
-💡 This means you can tell your AI assistant: <em>"Check my BNB balance and send 0.1 BNB to this address"</em> — and it actually does it, on-chain, in real time.
-</div>
-
-<h3>🛠️ How does it work technically?</h3>
-<div class="step-block"><div class="step-num">1</div><div class="step-text">You connect Claude, Cursor, or another AI tool to the BNB Chain MCP server</div></div>
-<div class="step-block"><div class="step-num">2</div><div class="step-text">The AI gains access to BNB Chain tools (read blocks, send txs, call contracts)</div></div>
-<div class="step-block"><div class="step-num">3</div><div class="step-text">You give it a goal in plain English: "Monitor my wallet and alert me when I receive BNB"</div></div>
-<div class="step-block"><div class="step-num">4</div><div class="step-text">The agent executes autonomously — no code needed from you</div></div>
-
-<div class="code-block"># Install BNB Chain MCP (for developers)
-npx @bnb-chain/mcp@latest
-
-# In Claude Code — the AI can now:
-# - Query BNB Chain blocks
-# - Read wallet balances
-# - Execute transactions
-# - Deploy ERC-20 tokens</div>
-
-<h3>🌎 Why this matters for LatAm</h3>
-<p>MCP + BNB Chain lowers the technical barrier to zero. A non-developer in Mexico or Argentina can describe what they want to build — and an AI agent will build and deploy it on BNB Chain. This is the future of financial inclusion.</p>
-
-<div class="callout callout-green">
-✅ <strong>Summary:</strong> MCP connects AI to BNB Chain. Result: AI agents that can read, write, and interact with blockchain — in plain language, no code needed. Track 2 complete!
-</div>`,
-      tweet: "¡Completé el Track 2 del @BNBCHAIN LatAm Learning Path! 🤖✅\n\nAprendí qué es IA, qué son los Agentes de IA, y cómo MCP conecta la inteligencia artificial con BNB Chain.\n\nEl futuro de Web3 ya está aquí 🚀 @stefanocintioli #MCP #BNBChain #AIAgents #Web3LatAm"
+    chip: { en: '🤖 Track 2 · Lesson 3', es: '🤖 Track 2 · Lección 3' },
+    chipColor: '#7C3AED', chipBg: '#F3F0FF',
+    title: { en: 'AI + BNB Chain', es: 'IA + BNB Chain' },
+    time: { en: '4 min · The future', es: '4 min · El futuro' },
+    headline: {
+      en: 'AI agents can send money, sign transactions, and build on-chain — in plain language.',
+      es: 'Los agentes de IA pueden enviar dinero, firmar transacciones y construir on-chain — en lenguaje llano.'
     },
-    es: {
-      title: 'MCP + BNB Chain — La IA Conecta con Blockchain',
-      tagline: 'Track 2 · Lección 3 · IA & El Futuro 🤖',
-      time: '~6 min de lectura',
-      color: '#9B59B6',
-      body: `
-<h3>🔌 ¿Qué es MCP?</h3>
-<p>El <strong>Model Context Protocol (MCP)</strong> es un estándar abierto que permite a los modelos de IA conectarse a herramientas externas, fuentes de datos y servicios — incluidas redes blockchain como BNB Chain.</p>
-<p>Piénsalo como un <strong>sistema universal de plugins para IA</strong>. Así como tu teléfono tiene apps para diferentes cosas, MCP permite a los asistentes de IA usar "apps" — incluidas herramientas on-chain.</p>
-
-<div class="callout callout-purple">
-🔗 MCP = el puente entre el cerebro de la IA y el mundo real (y Web3). Es lo que convierte un chatbot en un agente que puede hacer cosas reales on-chain.
-</div>
-
-<h3>⚡ BNB Chain + MCP en práctica</h3>
-<p>Con el <strong>servidor MCP de BNB Chain</strong>, un agente de IA puede:</p>
-<ul>
-  <li>📊 <strong>Leer datos blockchain</strong> — verificar balances, transacciones, estado de contratos</li>
-  <li>💸 <strong>Enviar transacciones</strong> — transferir tokens, interactuar con contratos inteligentes</li>
-  <li>🪙 <strong>Desplegar contratos</strong> — crear nuevos tokens o protocolos DeFi en lenguaje natural</li>
-  <li>🔍 <strong>Consultar protocolos DeFi</strong> — obtener precios en vivo, liquidez, rendimientos</li>
-  <li>🤖 <strong>Registrarse como agente de IA on-chain</strong> — usando el estándar ERC-8004</li>
-</ul>
-
-<div class="callout callout-blue">
-💡 Esto significa que puedes decirle a tu asistente de IA: <em>"Verifica mi saldo de BNB y envía 0.1 BNB a esta dirección"</em> — y realmente lo hace, on-chain, en tiempo real.
-</div>
-
-<h3>🛠️ ¿Cómo funciona técnicamente?</h3>
-<div class="step-block"><div class="step-num">1</div><div class="step-text">Conectas Claude, Cursor u otra herramienta de IA al servidor MCP de BNB Chain</div></div>
-<div class="step-block"><div class="step-num">2</div><div class="step-text">La IA obtiene acceso a las herramientas de BNB Chain (leer bloques, enviar txs, llamar contratos)</div></div>
-<div class="step-block"><div class="step-num">3</div><div class="step-text">Le das un objetivo en español llano: "Monitorea mi wallet y avísame cuando reciba BNB"</div></div>
-<div class="step-block"><div class="step-num">4</div><div class="step-text">El agente ejecuta de forma autónoma — sin código de tu parte</div></div>
-
-<div class="code-block"># Instalar BNB Chain MCP (para desarrolladores)
-npx @bnb-chain/mcp@latest
-
-# En Claude Code — la IA ya puede:
-# - Consultar bloques de BNB Chain
-# - Leer balances de wallets
-# - Ejecutar transacciones
-# - Desplegar tokens ERC-20</div>
-
-<h3>🌎 Por qué esto importa para LatAm</h3>
-<p>MCP + BNB Chain reduce la barrera técnica a cero. Un no-desarrollador en México o Argentina puede describir lo que quiere construir — y un agente de IA lo construirá y desplegará en BNB Chain. Esto es el futuro de la inclusión financiera.</p>
-
-<div class="callout callout-green">
-✅ <strong>Resumen:</strong> MCP conecta la IA con BNB Chain. Resultado: agentes de IA que pueden leer, escribir e interactuar con blockchain — en lenguaje llano, sin código. ¡Track 2 completado!
-</div>`,
-      tweet: "¡Completé el Track 2 del @BNBCHAIN LatAm Learning Path! 🤖✅\n\nAprendí qué es IA, qué son los Agentes de IA, y cómo MCP conecta la inteligencia artificial con BNB Chain.\n\nEl futuro de Web3 ya está aquí 🚀 @stefanocintioli #MCP #BNBChain #AIAgents #Web3LatAm"
+    bullets: {
+      en: [
+        'The BNB Chain MCP Server is a bridge that connects AI tools (like Claude) to BNB Chain.',
+        'With it, you can tell an AI: "Check my BNB balance" — and it does it, live, on-chain.',
+        'AI agents can deploy smart contracts, swap tokens, and interact with DeFi protocols — from a simple description.',
+        'For LatAm, this means zero technical barrier. Describe what you want to build, and AI builds and deploys it on BNB Chain.'
+      ],
+      es: [
+        'El BNB Chain MCP Server es un puente que conecta herramientas de IA (como Claude) con BNB Chain.',
+        'Con él, puedes decirle a una IA: "Verifica mi saldo de BNB" — y lo hace, en vivo, on-chain.',
+        'Los agentes de IA pueden desplegar contratos inteligentes, intercambiar tokens e interactuar con protocolos DeFi — desde una simple descripción.',
+        'Para LatAm, esto significa cero barrera técnica. Describe lo que quieres construir, y la IA lo construye y despliega en BNB Chain.'
+      ]
+    },
+    fact: {
+      en: 'Using Claude Code + BNB Chain MCP, you can type "deploy an ERC-20 token on BNB Chain testnet called MiToken" and it actually happens — no Solidity knowledge required.',
+      es: 'Usando Claude Code + BNB Chain MCP, puedes escribir "despliega un token ERC-20 en la testnet de BNB Chain llamado MiToken" — y realmente sucede, sin conocer Solidity.'
+    },
+    action: {
+      en: 'To try BNB Chain MCP yourself, run: npx @bnb-chain/mcp@latest in your terminal.',
+      es: 'Para probar BNB Chain MCP tú mismo, ejecuta: npx @bnb-chain/mcp@latest en tu terminal.'
+    },
+    tweet: {
+      es: `✅ Completé el Track 2 del BNB Chain LatAm Learning Path 🎓\n\nIA + @BNBCHAIN = agentes que envían dinero, firman transacciones y construyen on-chain en lenguaje llano.\n\n@BNBChainLatAm #AIAgents #MCP #BNBChain #Web3LatAm\n${SITE_URL}`
     }
   },
   '3-1': {
-    en: {
-      title: 'What is Vibecoding?',
-      tagline: 'Track 3 · Lesson 1 · Vibecoding 🛠️',
-      time: '~4 min read',
-      color: '#1ABC9C',
-      body: `
-<h3>🎨 The new way to build</h3>
-<p><strong>Vibecoding</strong> is the practice of building real software products using natural language — just describing what you want to AI, and having it write the code for you. No computer science degree required.</p>
-
-<div class="callout callout-teal">
-✨ Vibecoding = describing your vision + letting AI code it. You focus on the <em>what</em>, AI handles the <em>how</em>.
-</div>
-
-<h3>📖 Where did the term come from?</h3>
-<p>The term was popularized by <strong>Andrej Karpathy</strong> (ex-OpenAI, Tesla AI Director) in 2025. He described coding by "vibing" with an AI — expressing your intent in natural language and iterating until you get what you want.</p>
-
-<h3>🚫 What vibecoding is NOT</h3>
-<ul>
-  <li>❌ It's not copy-pasting random code and hoping it works</li>
-  <li>❌ It's not replacing developers (yet)</li>
-  <li>❌ It's not just using ChatGPT to answer questions</li>
-</ul>
-<p>It's a <em>new skill</em> — learning to communicate clearly with AI, iterate fast, and ship products.</p>
-
-<h3>⚡ Why vibecoding is a superpower for LatAm</h3>
-<ul>
-  <li>🌍 <strong>No English required</strong> — modern AI understands Spanish perfectly</li>
-  <li>💰 <strong>Zero cost to start</strong> — free tiers on Replit, Claude, Cursor</li>
-  <li>⚡ <strong>Idea to product in hours</strong> — not months or years</li>
-  <li>🧠 <strong>Democratizes tech entrepreneurship</strong> — anyone with a smartphone can build</li>
-</ul>
-
-<div class="callout callout-blue">
-🌎 A teenager in Medellín can now build and deploy a DeFi tool on BNB Chain in an afternoon — with just a phone and a good prompt. That's vibecoding.
-</div>
-
-<h3>🔧 What can you build with vibecoding?</h3>
-<ul>
-  <li>Web apps and landing pages</li>
-  <li>Telegram or Discord bots</li>
-  <li>Smart contracts on BNB Chain</li>
-  <li>DeFi dashboards</li>
-  <li>AI agents with wallets</li>
-  <li>NFT minting tools</li>
-</ul>
-
-<div class="callout callout-green">
-✅ <strong>Summary:</strong> Vibecoding = building with AI using plain language. No code knowledge needed. The barrier to building Web3 products is now essentially zero.
-</div>`,
-      tweet: "¡El vibecoding es la habilidad más importante de 2025! 🛠️✨\n\nDescribes lo que quieres en español, la IA lo construye. Con @BNBCHAIN puedes desplegar en blockchain en horas.\n\n¡Aprende en el LatAm Learning Path! 👇 @stefanocintioli #Vibecoding #BNBChain #Web3LatAm"
+    chip: { en: '🛠️ Track 3 · Lesson 1', es: '🛠️ Track 3 · Lección 1' },
+    chipColor: '#0EA5E9', chipBg: '#E0F2FE',
+    title: { en: 'What is Vibecoding?', es: '¿Qué es el Vibecoding?' },
+    time: { en: '3 min · Intro', es: '3 min · Introducción' },
+    headline: {
+      en: 'You describe what you want in plain language. AI builds it.',
+      es: 'Describes lo que quieres en español. La IA lo construye.'
     },
-    es: {
-      title: '¿Qué es el Vibecoding?',
-      tagline: 'Track 3 · Lección 1 · Vibecoding 🛠️',
-      time: '~4 min de lectura',
-      color: '#1ABC9C',
-      body: `
-<h3>🎨 La nueva forma de construir</h3>
-<p>El <strong>vibecoding</strong> es la práctica de construir productos de software reales usando lenguaje natural — solo describiendo lo que quieres a la IA, y dejando que ella escriba el código por ti. No se necesita título en ciencias de la computación.</p>
-
-<div class="callout callout-teal">
-✨ Vibecoding = describir tu visión + dejar que la IA la programe. Tú te enfocas en el <em>qué</em>, la IA maneja el <em>cómo</em>.
-</div>
-
-<h3>📖 ¿De dónde viene el término?</h3>
-<p>El término fue popularizado por <strong>Andrej Karpathy</strong> (ex-OpenAI, Director de IA de Tesla) en 2025. Describió programar al "ritmo" de una IA — expresando tu intención en lenguaje natural e iterando hasta obtener lo que deseas.</p>
-
-<h3>🚫 Lo que vibecoding NO es</h3>
-<ul>
-  <li>❌ No es copiar-pegar código aleatorio y esperar que funcione</li>
-  <li>❌ No está reemplazando a los desarrolladores (todavía)</li>
-  <li>❌ No es solo usar ChatGPT para responder preguntas</li>
-</ul>
-<p>Es una <em>nueva habilidad</em> — aprender a comunicarse claramente con la IA, iterar rápido y lanzar productos.</p>
-
-<h3>⚡ Por qué el vibecoding es un superpoder para LatAm</h3>
-<ul>
-  <li>🌍 <strong>No se requiere inglés</strong> — la IA moderna entiende español perfectamente</li>
-  <li>💰 <strong>Costo cero para empezar</strong> — planes gratuitos en Replit, Claude, Cursor</li>
-  <li>⚡ <strong>De idea a producto en horas</strong> — no meses ni años</li>
-  <li>🧠 <strong>Democratiza el emprendimiento tecnológico</strong> — cualquiera con un smartphone puede construir</li>
-</ul>
-
-<div class="callout callout-blue">
-🌎 Un adolescente en Medellín ya puede construir y desplegar una herramienta DeFi en BNB Chain en una tarde — solo con un teléfono y un buen prompt. Eso es vibecoding.
-</div>
-
-<h3>🔧 ¿Qué puedes construir con vibecoding?</h3>
-<ul>
-  <li>Apps web y landing pages</li>
-  <li>Bots de Telegram o Discord</li>
-  <li>Contratos inteligentes en BNB Chain</li>
-  <li>Dashboards DeFi</li>
-  <li>Agentes de IA con wallets</li>
-  <li>Herramientas de minteo de NFTs</li>
-</ul>
-
-<div class="callout callout-green">
-✅ <strong>Resumen:</strong> Vibecoding = construir con IA usando lenguaje natural. No se necesita saber programar. La barrera para construir productos Web3 es ahora prácticamente cero.
-</div>`,
-      tweet: "¡El vibecoding es la habilidad más importante de 2025! 🛠️✨\n\nDescribes lo que quieres en español, la IA lo construye. Con @BNBCHAIN puedes desplegar en blockchain en horas.\n\n¡Aprende en el LatAm Learning Path! 👇 @stefanocintioli #Vibecoding #BNBChain #Web3LatAm"
+    bullets: {
+      en: [
+        'Vibecoding = building real software by describing it in natural language and letting AI write the code.',
+        'No computer science degree. No programming knowledge. Just clear thinking and good descriptions.',
+        'The term was popularized in 2025 by Andrej Karpathy (ex-OpenAI, ex-Tesla AI Director).',
+        'A person in Medellín with a smartphone and a good idea can now build and deploy a DeFi tool on BNB Chain in an afternoon.'
+      ],
+      es: [
+        'Vibecoding = construir software real describiéndolo en lenguaje natural y dejando que la IA escriba el código.',
+        'Sin título universitario. Sin conocimientos de programación. Solo pensamiento claro y buenas descripciones.',
+        'El término fue popularizado en 2025 por Andrej Karpathy (ex-OpenAI, ex-Director de IA de Tesla).',
+        'Una persona en Medellín con un smartphone y una buena idea ya puede construir y desplegar una herramienta DeFi en BNB Chain en una tarde.'
+      ]
+    },
+    fact: {
+      en: 'This very platform — the one you\'re reading right now — was built with vibecoding. No manual code was written. Just descriptions and iterations.',
+      es: 'Esta misma plataforma — la que estás leyendo ahora — fue construida con vibecoding. No se escribió código manual. Solo descripciones e iteraciones.'
+    },
+    action: {
+      en: 'Think of one problem in your community that an app could solve. Write it in one sentence. That sentence is your first prompt.',
+      es: 'Piensa en un problema de tu comunidad que una app podría resolver. Escríbelo en una frase. Esa frase es tu primer prompt.'
+    },
+    tweet: {
+      es: `Acabo de aprender qué es el vibecoding en el BNB Chain LatAm Learning Path 🎓\n\nDescribes lo que quieres en español, la IA lo construye. Sin código. Sin título. Solo ideas.\n\n@BNBChainLatAm #Vibecoding #BNBChain #Web3LatAm\n${SITE_URL}`
     }
   },
   '3-2': {
-    en: {
-      title: 'Tools: Claude Code, Cursor, Replit',
-      tagline: 'Track 3 · Lesson 2 · Vibecoding 🛠️',
-      time: '~6 min read',
-      color: '#1ABC9C',
-      body: `
-<h3>🛠️ Your vibecoding toolkit</h3>
-<p>You don't need dozens of tools to start. Here are the three most powerful ones for building on BNB Chain with AI — all with free tiers.</p>
-
-<h3>🤖 Claude Code (Anthropic)</h3>
-<div class="callout callout-teal">
-<strong>Best for:</strong> Power builders, complex projects, BNB Chain MCP integration
-</div>
-<p><strong>Claude Code</strong> is a terminal-based AI coding assistant by Anthropic. It has access to your full filesystem, can run commands, write and edit code across multiple files, and — crucially — connect to MCP servers like BNB Chain.</p>
-<ul>
-  <li>✅ Best reasoning of any coding AI</li>
-  <li>✅ Native MCP support — connect to BNB Chain directly</li>
-  <li>✅ Handles large, complex projects</li>
-  <li>✅ Perfect for building AI agents</li>
-  <li>📎 <a href="https://claude.ai/code" target="_blank" rel="noopener">claude.ai/code</a></li>
-</ul>
-
-<h3>🖱️ Cursor</h3>
-<div class="callout callout-teal">
-<strong>Best for:</strong> Developers wanting a full IDE experience with AI
-</div>
-<p><strong>Cursor</strong> is a code editor (like VS Code) with AI built in. You write code, but the AI can complete, refactor, explain, and build alongside you — all inside a familiar interface.</p>
-<ul>
-  <li>✅ Full IDE — files, terminal, git all in one</li>
-  <li>✅ Great for Solidity (BNB Chain smart contracts)</li>
-  <li>✅ Free tier available</li>
-  <li>✅ Good for people with some coding background</li>
-  <li>📎 <a href="https://cursor.com" target="_blank" rel="noopener">cursor.com</a></li>
-</ul>
-
-<h3>🌐 Replit</h3>
-<div class="callout callout-teal">
-<strong>Best for:</strong> Beginners, mobile users, deploying fast
-</div>
-<p><strong>Replit</strong> is a browser-based coding environment. No installation needed — open it on your phone or laptop and start building immediately. The AI Agent in Replit can build entire apps from a single description.</p>
-<ul>
-  <li>✅ Works on any device, including mobile</li>
-  <li>✅ Deploy to the web in one click</li>
-  <li>✅ Best for non-technical users</li>
-  <li>✅ Has built-in hosting and databases</li>
-  <li>📎 <a href="https://replit.com" target="_blank" rel="noopener">replit.com</a></li>
-</ul>
-
-<h3>🗺️ Which one should you choose?</h3>
-<ul>
-  <li>📱 <strong>New to tech?</strong> → Start with Replit</li>
-  <li>💻 <strong>Comfortable with computers?</strong> → Try Cursor</li>
-  <li>🔗 <strong>Want to build on BNB Chain with AI agents?</strong> → Claude Code</li>
-</ul>
-
-<div class="callout callout-green">
-✅ <strong>Summary:</strong> Claude Code for power, Cursor for IDE experience, Replit for ease of use. All three can build Web3 products on BNB Chain. Pick your vibe and start.
-</div>`,
-      tweet: "Mis 3 herramientas de vibecoding favoritas para construir en @BNBCHAIN 🛠️\n\n🤖 Claude Code — para agentes de IA y MCP\n🖱️ Cursor — para IDE completo con IA\n🌐 Replit — para empezar desde cero en minutos\n\n¡No necesitas saber programar! @stefanocintioli #Vibecoding #Web3LatAm"
+    chip: { en: '🛠️ Track 3 · Lesson 2', es: '🛠️ Track 3 · Lección 2' },
+    chipColor: '#0EA5E9', chipBg: '#E0F2FE',
+    title: { en: 'Tools to Get Started', es: 'Herramientas Para Empezar' },
+    time: { en: '4 min · Claude, Cursor, Replit', es: '4 min · Claude, Cursor, Replit' },
+    headline: {
+      en: 'Three tools. All free to start. Pick one and go.',
+      es: 'Tres herramientas. Todas gratis para empezar. Elige una y empieza.'
     },
-    es: {
-      title: 'Herramientas: Claude Code, Cursor, Replit',
-      tagline: 'Track 3 · Lección 2 · Vibecoding 🛠️',
-      time: '~6 min de lectura',
-      color: '#1ABC9C',
-      body: `
-<h3>🛠️ Tu kit de vibecoding</h3>
-<p>No necesitas docenas de herramientas para empezar. Aquí están las tres más poderosas para construir en BNB Chain con IA — todas con planes gratuitos.</p>
-
-<h3>🤖 Claude Code (Anthropic)</h3>
-<div class="callout callout-teal">
-<strong>Mejor para:</strong> Builders avanzados, proyectos complejos, integración con MCP de BNB Chain
-</div>
-<p><strong>Claude Code</strong> es un asistente de codificación IA basado en terminal de Anthropic. Tiene acceso a tu sistema de archivos completo, puede ejecutar comandos, escribir y editar código en múltiples archivos y — crucialmente — conectarse a servidores MCP como BNB Chain.</p>
-<ul>
-  <li>✅ El mejor razonamiento de cualquier IA de codificación</li>
-  <li>✅ Soporte MCP nativo — conéctate a BNB Chain directamente</li>
-  <li>✅ Maneja proyectos grandes y complejos</li>
-  <li>✅ Perfecto para construir agentes de IA</li>
-  <li>📎 <a href="https://claude.ai/code" target="_blank" rel="noopener">claude.ai/code</a></li>
-</ul>
-
-<h3>🖱️ Cursor</h3>
-<div class="callout callout-teal">
-<strong>Mejor para:</strong> Desarrolladores que quieren una experiencia IDE completa con IA
-</div>
-<p><strong>Cursor</strong> es un editor de código (como VS Code) con IA integrada. Escribes código, pero la IA puede completar, refactorizar, explicar y construir junto a ti — todo dentro de una interfaz familiar.</p>
-<ul>
-  <li>✅ IDE completo — archivos, terminal, git todo en uno</li>
-  <li>✅ Excelente para Solidity (contratos inteligentes de BNB Chain)</li>
-  <li>✅ Plan gratuito disponible</li>
-  <li>✅ Bueno para personas con algo de experiencia en código</li>
-  <li>📎 <a href="https://cursor.com" target="_blank" rel="noopener">cursor.com</a></li>
-</ul>
-
-<h3>🌐 Replit</h3>
-<div class="callout callout-teal">
-<strong>Mejor para:</strong> Principiantes, usuarios móviles, despliegue rápido
-</div>
-<p><strong>Replit</strong> es un entorno de codificación basado en navegador. Sin instalación — ábrelo en tu teléfono o laptop y empieza a construir de inmediato. El Agente IA en Replit puede construir apps completas desde una sola descripción.</p>
-<ul>
-  <li>✅ Funciona en cualquier dispositivo, incluido móvil</li>
-  <li>✅ Despliega a la web con un clic</li>
-  <li>✅ El mejor para usuarios no técnicos</li>
-  <li>✅ Tiene hosting y bases de datos integrados</li>
-  <li>📎 <a href="https://replit.com" target="_blank" rel="noopener">replit.com</a></li>
-</ul>
-
-<h3>🗺️ ¿Cuál deberías elegir?</h3>
-<ul>
-  <li>📱 <strong>¿Nuevo en tecnología?</strong> → Empieza con Replit</li>
-  <li>💻 <strong>¿Cómodo con computadoras?</strong> → Prueba Cursor</li>
-  <li>🔗 <strong>¿Quieres construir en BNB Chain con agentes de IA?</strong> → Claude Code</li>
-</ul>
-
-<div class="callout callout-green">
-✅ <strong>Resumen:</strong> Claude Code para poder, Cursor para experiencia IDE, Replit para facilidad de uso. Los tres pueden construir productos Web3 en BNB Chain. Elige tu vibe y empieza.
-</div>`,
-      tweet: "Mis 3 herramientas de vibecoding favoritas para construir en @BNBCHAIN 🛠️\n\n🤖 Claude Code — para agentes de IA y MCP\n🖱️ Cursor — para IDE completo con IA\n🌐 Replit — para empezar desde cero en minutos\n\n¡No necesitas saber programar! @stefanocintioli #Vibecoding #Web3LatAm"
+    tools: {
+      en: [
+        { icon: '🤖', name: 'Claude Code', desc: 'The most powerful AI coding tool. Connects directly to BNB Chain via MCP. Best for building agents, deploying contracts, and complex projects.', link: 'claude.ai', url: 'https://claude.ai' },
+        { icon: '🖱️', name: 'Cursor', desc: 'An AI-powered code editor (like VS Code with a brain). Great for writing Solidity smart contracts and full apps with real-time AI assistance.', link: 'cursor.com', url: 'https://cursor.com' },
+        { icon: '🌐', name: 'Replit', desc: 'Browser-based, works on any device including mobile. Build and deploy a web app in minutes without any setup. Perfect starting point for beginners.', link: 'replit.com', url: 'https://replit.com' },
+      ],
+      es: [
+        { icon: '🤖', name: 'Claude Code', desc: 'La herramienta de codificación IA más poderosa. Se conecta directamente a BNB Chain vía MCP. La mejor para construir agentes, desplegar contratos y proyectos complejos.', link: 'claude.ai', url: 'https://claude.ai' },
+        { icon: '🖱️', name: 'Cursor', desc: 'Un editor de código con IA integrada (como VS Code con cerebro). Genial para escribir contratos inteligentes en Solidity y apps completas con asistencia IA en tiempo real.', link: 'cursor.com', url: 'https://cursor.com' },
+        { icon: '🌐', name: 'Replit', desc: 'Funciona en el navegador, en cualquier dispositivo incluyendo móvil. Construye y despliega una app web en minutos sin configuración. Punto de partida perfecto para principiantes.', link: 'replit.com', url: 'https://replit.com' },
+      ]
+    },
+    fact: {
+      en: 'You don\'t need to choose one forever. Start with Replit to experiment, move to Cursor when you want more control, use Claude Code when you\'re ready to build on BNB Chain.',
+      es: 'No tienes que elegir una para siempre. Empieza con Replit para experimentar, pasa a Cursor cuando quieras más control, usa Claude Code cuando estés listo para construir en BNB Chain.'
+    },
+    action: {
+      en: 'Open one of these right now and type: "Build me a simple BNB price tracker webpage." See what it builds.',
+      es: 'Abre una de estas ahora mismo y escribe: "Hazme una página web simple que muestre el precio de BNB." Mira qué construye.'
+    },
+    tweet: {
+      es: `Mis 3 herramientas favoritas para vibecoding en @BNBCHAIN 🎓\n\n🤖 Claude Code — para agentes IA\n🖱️ Cursor — para IDE completo\n🌐 Replit — para empezar ahora mismo\n\n@BNBChainLatAm #Vibecoding #BNBChain #Web3LatAm\n${SITE_URL}`
     }
   },
   '3-3': {
-    en: {
-      title: 'Your First Prompt — Build on BNB Chain',
-      tagline: 'Track 3 · Lesson 3 · Vibecoding 🛠️',
-      time: '~7 min read',
-      color: '#1ABC9C',
-      body: `
-<h3>💬 The art of the prompt</h3>
-<p>A great prompt is the difference between getting garbage and getting gold. When you vibecode, you're not just "asking" — you're <strong>specifying a product</strong>. The better your prompt, the better your result.</p>
-
-<div class="callout callout-teal">
-🎯 <strong>Prompt formula:</strong> Context + Goal + Constraints + Stack = Great output
-</div>
-
-<h3>📐 Anatomy of a great prompt</h3>
-<ul>
-  <li><strong>Context:</strong> Who is this for? What problem does it solve?</li>
-  <li><strong>Goal:</strong> What should the product do exactly?</li>
-  <li><strong>Constraints:</strong> One file? Mobile-first? In Spanish? No backend?</li>
-  <li><strong>Stack:</strong> HTML+CSS? BNB Chain? MetaMask? Telegram bot?</li>
-</ul>
-
-<h3>🛠️ Example prompts for BNB Chain</h3>
-
-<div class="callout callout-teal">💡 <strong>Prompt 1 — BNB Price Dashboard</strong></div>
-<div class="code-block">Build a single HTML page that shows the current BNB price
-in USD and BRL. Use the CoinGecko API. Dark theme with
-BNB yellow (#F0B90B). Mobile-first. No backend needed.
-Add a refresh button. Show price change in the last 24h.</div>
-
-<div class="callout callout-teal">💡 <strong>Prompt 2 — Telegram Bot for LatAm Community</strong></div>
-<div class="code-block">Build a Telegram bot in Python that responds in Spanish.
-When a user sends /price, it returns the current BNB price.
-When they send /learn, it sends one random BNB Chain fact.
-Deploy-ready for Railway or Replit. Include requirements.txt.</div>
-
-<div class="callout callout-teal">💡 <strong>Prompt 3 — AI Agent with BNB Chain Wallet</strong></div>
-<div class="code-block">Using Claude Code with BNB Chain MCP:
-Create an AI agent that can check my BNB wallet balance,
-show my last 5 transactions, and send a small BNB test
-transaction to an address I specify.
-Use BNB Chain testnet for safety.</div>
-
-<h3>🔄 The vibecoding loop</h3>
-<div class="step-block"><div class="step-num">1</div><div class="step-text"><strong>Describe</strong> — Write your prompt clearly (use the formula above)</div></div>
-<div class="step-block"><div class="step-num">2</div><div class="step-text"><strong>Generate</strong> — Let the AI build the first version</div></div>
-<div class="step-block"><div class="step-num">3</div><div class="step-text"><strong>Test</strong> — Run it, click it, see what works and what doesn't</div></div>
-<div class="step-block"><div class="step-num">4</div><div class="step-text"><strong>Iterate</strong> — "The button is broken. Also add dark mode." — keep going</div></div>
-<div class="step-block"><div class="step-num">5</div><div class="step-text"><strong>Ship</strong> — Deploy on Vercel, Replit, or share the HTML file directly</div></div>
-
-<h3>🚀 Your first project idea</h3>
-<p>Here's a perfect first project for the BNB Chain LatAm community — a simple page that explains what BNB Chain is, in Spanish, for your friends and family. You already know enough to describe it. Now go build it.</p>
-
-<div class="callout callout-green">
-🎉 <strong>Track 3 complete!</strong> You now know what vibecoding is, which tools to use, and how to write great prompts. You have everything you need to build on BNB Chain. Go make something.
-</div>`,
-      tweet: "✅ ¡Completé el Track 3 del @BNBCHAIN LatAm Learning Path — Vibecoding!\n\nYa sé cómo escribir prompts para construir en BNB Chain 🛠️\n\nClaude Code + MCP + BNB Chain = el stack del futuro para LatAm 🌎🚀 @stefanocintioli #Vibecoding #BNBChain #Web3LatAm"
+    chip: { en: '🛠️ Track 3 · Lesson 3', es: '🛠️ Track 3 · Lección 3' },
+    chipColor: '#0EA5E9', chipBg: '#E0F2FE',
+    title: { en: 'Your First Prompt', es: 'Tu Primer Prompt' },
+    time: { en: '5 min · Copy and try', es: '5 min · Copia y prueba' },
+    headline: {
+      en: 'A great prompt = context + goal + constraints. Here are 3 ready to use.',
+      es: 'Un gran prompt = contexto + objetivo + restricciones. Aquí tienes 3 listos para usar.'
     },
-    es: {
-      title: 'Tu Primer Prompt — Construye en BNB Chain',
-      tagline: 'Track 3 · Lección 3 · Vibecoding 🛠️',
-      time: '~7 min de lectura',
-      color: '#1ABC9C',
-      body: `
-<h3>💬 El arte del prompt</h3>
-<p>Un gran prompt es la diferencia entre obtener basura y obtener oro. Cuando vibecodes, no solo "preguntas" — estás <strong>especificando un producto</strong>. Cuanto mejor sea tu prompt, mejor será tu resultado.</p>
-
-<div class="callout callout-teal">
-🎯 <strong>Fórmula del prompt:</strong> Contexto + Objetivo + Restricciones + Stack = Gran resultado
-</div>
-
-<h3>📐 Anatomía de un gran prompt</h3>
-<ul>
-  <li><strong>Contexto:</strong> ¿Para quién es? ¿Qué problema resuelve?</li>
-  <li><strong>Objetivo:</strong> ¿Qué debe hacer exactamente el producto?</li>
-  <li><strong>Restricciones:</strong> ¿Un archivo? ¿Mobile-first? ¿En español? ¿Sin backend?</li>
-  <li><strong>Stack:</strong> ¿HTML+CSS? ¿BNB Chain? ¿MetaMask? ¿Bot de Telegram?</li>
-</ul>
-
-<h3>🛠️ Prompts de ejemplo para BNB Chain</h3>
-
-<div class="callout callout-teal">💡 <strong>Prompt 1 — Dashboard del Precio de BNB</strong></div>
-<div class="code-block">Construye una página HTML única que muestre el precio
-actual de BNB en USD y ARS. Usa la API de CoinGecko.
-Tema oscuro con amarillo BNB (#F0B90B). Mobile-first.
-Sin backend. Agrega un botón de actualización.
-Muestra el cambio de precio en las últimas 24h.</div>
-
-<div class="callout callout-teal">💡 <strong>Prompt 2 — Bot de Telegram para la Comunidad LatAm</strong></div>
-<div class="code-block">Construye un bot de Telegram en Python que responda
-en español. Cuando un usuario envíe /precio, devuelve
-el precio actual de BNB. Cuando envíe /aprender, manda
-un dato aleatorio sobre BNB Chain. Listo para desplegar
-en Railway o Replit. Incluye requirements.txt.</div>
-
-<div class="callout callout-teal">💡 <strong>Prompt 3 — Agente de IA con Wallet de BNB Chain</strong></div>
-<div class="code-block">Usando Claude Code con BNB Chain MCP:
-Crea un agente de IA que pueda verificar el balance
-de mi wallet BNB, mostrar mis últimas 5 transacciones,
-y enviar una pequeña transacción de prueba BNB a una
-dirección que yo especifique.
-Usa la testnet de BNB Chain para mayor seguridad.</div>
-
-<h3>🔄 El ciclo del vibecoding</h3>
-<div class="step-block"><div class="step-num">1</div><div class="step-text"><strong>Describir</strong> — Escribe tu prompt claramente (usa la fórmula de arriba)</div></div>
-<div class="step-block"><div class="step-num">2</div><div class="step-text"><strong>Generar</strong> — Deja que la IA construya la primera versión</div></div>
-<div class="step-block"><div class="step-num">3</div><div class="step-text"><strong>Probar</strong> — Ejecútalo, haz clic, ve qué funciona y qué no</div></div>
-<div class="step-block"><div class="step-num">4</div><div class="step-text"><strong>Iterar</strong> — "El botón está roto. También agrega modo oscuro." — sigue adelante</div></div>
-<div class="step-block"><div class="step-num">5</div><div class="step-text"><strong>Lanzar</strong> — Despliega en Vercel, Replit, o comparte el archivo HTML directamente</div></div>
-
-<h3>🚀 Tu primer proyecto</h3>
-<p>Aquí hay un proyecto perfecto para la comunidad BNB Chain LatAm — una página simple que explica qué es BNB Chain, en español, para tus amigos y familia. Ya sabes suficiente para describirlo. Ahora ve a construirlo.</p>
-
-<div class="callout callout-green">
-🎉 <strong>¡Track 3 completado!</strong> Ya sabes qué es vibecoding, qué herramientas usar y cómo escribir grandes prompts. Tienes todo lo que necesitas para construir en BNB Chain. Ve a hacer algo.
-</div>`,
-      tweet: "✅ ¡Completé el Track 3 del @BNBCHAIN LatAm Learning Path — Vibecoding!\n\nYa sé cómo escribir prompts para construir en BNB Chain 🛠️\n\nClaude Code + MCP + BNB Chain = el stack del futuro para LatAm 🌎🚀 @stefanocintioli #Vibecoding #BNBChain #Web3LatAm"
+    bullets: {
+      en: [
+        'Be specific: "build a BNB price tracker" beats "build something with crypto"',
+        'Specify constraints: "single HTML file, no backend, mobile-first, dark theme"',
+        'Add your stack: "use BNB Chain, connect via MetaMask, show balance in USD and ARS"',
+        'Iterate: if the result isn\'t right, describe what\'s wrong and ask it to fix it'
+      ],
+      es: [
+        'Sé específico: "construye un tracker de precio de BNB" gana a "construye algo con cripto"',
+        'Especifica restricciones: "archivo HTML único, sin backend, mobile-first, tema oscuro"',
+        'Agrega tu stack: "usa BNB Chain, conecta vía MetaMask, muestra el saldo en USD y ARS"',
+        'Itera: si el resultado no es correcto, describe qué está mal y pídele que lo arregle'
+      ]
+    },
+    prompts: {
+      en: [
+        { label: 'Prompt 1 — BNB Price Dashboard', code: 'Build a single HTML page that shows the current BNB price in USD and ARS. Use CoinGecko API. Dark theme, BNB yellow (#F0B90B). Mobile-first. Add a refresh button and show 24h price change.' },
+        { label: 'Prompt 2 — LatAm Community Bot', code: 'Build a Telegram bot in Python that responds in Spanish. /precio returns current BNB price. /dato sends a random BNB Chain fact. /ayuda shows available commands. Ready to deploy on Replit.' },
+        { label: 'Prompt 3 — AI Agent on BNB Chain', code: 'Using Claude Code with BNB Chain MCP: create an agent that checks my BNB wallet balance and shows my last 5 transactions. Use BNB Chain testnet. Output results in Spanish.' },
+      ],
+      es: [
+        { label: 'Prompt 1 — Dashboard de Precio BNB', code: 'Construye una página HTML única que muestre el precio actual de BNB en USD y ARS. Usa la API de CoinGecko. Tema oscuro, amarillo BNB (#F0B90B). Mobile-first. Agrega un botón de actualización y muestra el cambio de precio en 24h.' },
+        { label: 'Prompt 2 — Bot para la Comunidad LatAm', code: 'Construye un bot de Telegram en Python que responda en español. /precio devuelve el precio actual de BNB. /dato envía un dato aleatorio sobre BNB Chain. /ayuda muestra los comandos disponibles. Listo para desplegar en Replit.' },
+        { label: 'Prompt 3 — Agente de IA en BNB Chain', code: 'Usando Claude Code con BNB Chain MCP: crea un agente que verifique el saldo de mi wallet BNB y muestre mis últimas 5 transacciones. Usa la testnet de BNB Chain. Muestra los resultados en español.' },
+      ]
+    },
+    fact: {
+      en: 'The best prompt you can write today is one that solves a real problem you or your community actually has. Start there.',
+      es: 'El mejor prompt que puedes escribir hoy es uno que resuelva un problema real que tú o tu comunidad realmente tiene. Empieza ahí.'
+    },
+    action: {
+      en: 'Copy Prompt 1 above, paste it into claude.ai, and press send. You\'ll have a working BNB price dashboard in under 2 minutes.',
+      es: 'Copia el Prompt 1 de arriba, pégalo en claude.ai y presiona enviar. Tendrás un dashboard de precio de BNB funcionando en menos de 2 minutos.'
+    },
+    actionLink: { text: 'claude.ai', url: 'https://claude.ai' },
+    tweet: {
+      es: `✅ ¡Completé el BNB Chain LatAm Learning Path completo! 🎓\n\nTracks 1-2-3: Blockchain, IA y Vibecoding.\n9 lecciones. Lista para construir en @BNBCHAIN.\n\n@BNBChainLatAm #Vibecoding #BNBChain #Web3LatAm\n${SITE_URL}`
     }
   }
 };
 
-// Track end lessons (3rd lesson of each track)
-const TRACK_END = { 1: 3, 2: 3, 3: 3 };
-const TRACK_COLORS = { 1: '#F0B90B', 2: '#9B59B6', 3: '#1ABC9C' };
+// ═══════════════════════════════════════
+//  RENDER LESSON
+// ═══════════════════════════════════════
 const TRACK_NAMES = {
-  en: { 1: 'BNB Chain Basics 🔗', 2: 'AI & The Future 🤖', 3: 'Vibecoding 🛠️' },
-  es: { 1: 'Fundamentos BNB Chain 🔗', 2: 'IA & El Futuro 🤖', 3: 'Vibecoding 🛠️' }
+  en: { 1: 'BNB Chain Basics', 2: 'AI & The Future', 3: 'Vibecoding' },
+  es: { 1: 'BNB Chain Basics', 2: 'AI & El Futuro', 3: 'Vibecoding' }
 };
 
-// ══════════════════════════════════════════════
-// RENDER LESSON
-// ══════════════════════════════════════════════
-function renderLesson(track, idx) {
-  currentTrack = track;
-  currentLessonIdx = idx;
-  const lessonNum = idx + 1;
-  const key = `${track}-${lessonNum}`;
-  const data = LESSONS[key][currentLang];
-  const done = isDone(track, lessonNum);
-  const isTrackEnd = lessonNum === 3;
+function renderLesson(track, lesson) {
+  const key = `${track}-${lesson}`;
+  const d = LESSONS[key];
+  if (!d) return;
+  const done = isDone(track, lesson);
+
+  // Chip
+  const chip = document.getElementById('lesson-chip');
+  chip.textContent = d.chip[LANG] || d.chip.es;
+  chip.style.background = d.chipBg;
+  chip.style.color = d.chipColor;
+  chip.style.border = `1px solid ${d.chipColor}33`;
+
+  // Title & meta
+  document.getElementById('lesson-title').textContent = d.title[LANG] || d.title.es;
+  const metaText = (d.time[LANG] || d.time.es) + (done ? ' · ✅ ' + (LANG==='es'?'Completada':'Completed') : '');
+  document.getElementById('lesson-meta').textContent = metaText;
 
   // Breadcrumb
-  document.getElementById('lesson-breadcrumb').textContent =
-    `${TRACK_NAMES[currentLang][track]} · ${t('Lesson', 'Lección')} ${lessonNum}/3`;
-
-  // Header
-  const tagColor = TRACK_COLORS[track];
-  document.getElementById('lesson-header').innerHTML = `
-    <div class="lesson-track-tag" style="background:${tagColor}22;border:1px solid ${tagColor};color:${tagColor};">${data.tagline}</div>
-    <div class="lesson-title">${data.title}</div>
-    <div class="lesson-meta">⏱ ${data.time} ${done ? `&nbsp;·&nbsp; ✅ ${t('Completed','Completado')}` : ''}</div>
-  `;
+  document.getElementById('breadcrumb').textContent =
+    TRACK_NAMES[LANG][track] + ' · ' + (LANG==='es'?'Lección':'Lesson') + ` ${lesson}/3`;
 
   // Content
-  document.getElementById('lesson-content').innerHTML = data.body;
+  let html = `<div class="lesson-content">`;
+  html += `<div class="content-what">${LANG==='es'?'Lo que aprenderás':'What you\'ll learn'}</div>`;
+  html += `<div class="content-headline">${d.headline[LANG]||d.headline.es}</div>`;
 
-  // Actions
-  const actionsEl = document.getElementById('lesson-actions');
-  let html = '';
-
-  if (done) {
-    html += `<div class="done-banner">✅ ${t('Lesson already completed! Keep going.', '¡Lección ya completada! Sigue avanzando.')}</div>`;
+  // Bullets
+  if (d.bullets) {
+    const bullets = d.bullets[LANG] || d.bullets.es;
+    html += `<div class="bullet-list">`;
+    bullets.forEach((b,i) => {
+      html += `<div class="bullet-item"><div class="bullet-dot">${i+1}</div><div>${b}</div></div>`;
+    });
+    html += `</div>`;
   }
 
-  // Complete / next button
-  if (!done) {
-    html += `<button class="btn-primary" onclick="completeLesson(${track}, ${lessonNum})">
-      ✅ ${t('Mark as Complete', 'Marcar como Completada')}
-    </button>`;
-  } else {
-    // Show next or finish
-    if (idx < 2) {
-      html += `<button class="btn-primary" onclick="openLesson(${track}, ${idx + 1})">
-        ${t('Next Lesson →', 'Siguiente Lección →')}
-      </button>`;
+  // Steps (wallet lesson)
+  if (d.steps) {
+    const steps = d.steps[LANG] || d.steps.es;
+    html += `<div class="steps-list">`;
+    steps.forEach((s,i) => {
+      html += `<div class="step-item"><div class="step-badge">${i+1}</div><div class="step-body"><strong>${s[0]}</strong> — ${s[1]}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Tools (tools lesson)
+  if (d.tools) {
+    const tools = d.tools[LANG] || d.tools.es;
+    tools.forEach(tool => {
+      html += `<div class="tool-card">
+        <div class="tool-icon">${tool.icon}</div>
+        <div class="tool-info">
+          <div class="tool-name">${tool.name}</div>
+          <div class="tool-desc">${tool.desc}</div>
+          <a class="tool-link" href="${tool.url}" target="_blank" rel="noopener">↗ ${tool.link}</a>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Prompts (prompt lesson)
+  if (d.prompts) {
+    const prompts = d.prompts[LANG] || d.prompts.es;
+    prompts.forEach(p => {
+      html += `<div class="code-label">${p.label}</div>`;
+      html += `<div class="code-box">${escHtml(p.code)}</div>`;
+    });
+  }
+
+  // Did you know
+  html += `<div class="did-you-know"><div class="dyk-icon">💡</div><div class="dyk-text"><strong>${LANG==='es'?'¿Sabías que?':'Did you know?'}</strong> ${d.fact[LANG]||d.fact.es}</div></div>`;
+
+  // Action step
+  let actionText = d.action[LANG] || d.action.es;
+  if (d.actionLink) {
+    actionText = actionText.replace(d.actionLink.text, `<a href="${d.actionLink.url}" target="_blank" rel="noopener">${d.actionLink.text}</a>`);
+  }
+  html += `<div class="action-step"><div class="action-icon">🎯</div><div class="action-text"><strong>${LANG==='es'?'Acción:':'Action:'}</strong> ${actionText}</div></div>`;
+
+  html += `</div>`; // /lesson-content
+
+  document.getElementById('lesson-content').innerHTML = html;
+
+  // Actions
+  const acts = document.getElementById('lesson-actions');
+  let actHtml = '';
+
+  if (done) {
+    actHtml += `<div class="done-bar">${t('done_bar')}</div>`;
+    if (lesson < 3) {
+      actHtml += `<button class="btn-next" onclick="openLesson(${track}, ${lesson+1})">${t('btn_next')}</button>`;
     } else {
-      html += `<button class="btn-primary" onclick="goHome()">
-        🏠 ${t('Back to Home', 'Volver al Inicio')}
-      </button>`;
+      actHtml += `<button class="btn-next" onclick="goHome()">${t('btn_home')}</button>`;
     }
+  } else {
+    actHtml += `<button class="btn-complete" onclick="completeLesson(${track}, ${lesson})">${t('btn_complete')}</button>`;
   }
 
   // Share on X
-  const tweetText = encodeURIComponent(data.tweet);
-  html += `<a class="btn-secondary btn-twitter" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;" href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener">
-    𝕏 ${t('Share on X', 'Compartir en X')}
-  </a>`;
+  const tweetText = encodeURIComponent(d.tweet.es);
+  actHtml += `<a class="btn-outline btn-x" href="https://x.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener">𝕏 ${t('btn_share_x')}</a>`;
 
-  // Track complete — show community button
-  if (done && isTrackEnd) {
-    html += `<a class="btn-secondary btn-telegram" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;" href="https://t.me/BNBChainLatam" target="_blank" rel="noopener">
-      ✈️ ${t('Join LatAm Community', 'Únete a la Comunidad LatAm')}
-    </a>`;
-  }
+  // Join community
+  actHtml += `<a class="btn-outline btn-tg" href="https://t.me/BNBChainES" target="_blank" rel="noopener">${t('btn_join_tg')}</a>`;
 
-  actionsEl.innerHTML = html;
+  acts.innerHTML = actHtml;
 }
 
-// ══════════════════════════════════════════════
-// COMPLETE LESSON
-// ══════════════════════════════════════════════
-function completeLesson(track, lessonNum) {
-  markDone(track, lessonNum);
-  updateHomeProgress();
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
-  // Check if all done
-  if (countDone() === 9) {
-    setTimeout(() => showView('certificate'), 400);
+// ═══════════════════════════════════════
+//  COMPLETE LESSON
+// ═══════════════════════════════════════
+function completeLesson(track, lesson) {
+  markDone(track, lesson);
+  updateHomeUI();
+  if (totalDone() === 9) {
+    setTimeout(() => showView('certificate'), 300);
     return;
   }
-
-  // Re-render to show updated state
-  renderLesson(track, lessonNum - 1);
+  renderLesson(track, lesson);
 }
 
-// ══════════════════════════════════════════════
-// CERTIFICATE SHARE
-// ══════════════════════════════════════════════
-function shareCertificate() {
-  const tweet = currentLang === 'es'
-    ? "🎓 ¡Completé el BNB Chain LatAm Learning Path!\n\n✅ Blockchain Basics\n✅ IA & Agentes\n✅ Vibecoding\n\n9 lecciones. 3 tracks. Listo para Web3 🚀\n\n@BNBCHAIN @stefanocintioli #BNBChain #Web3LatAm"
-    : "🎓 I completed the BNB Chain LatAm Learning Path!\n\n✅ Blockchain Basics\n✅ AI & Agents\n✅ Vibecoding\n\n9 lessons. 3 tracks. Ready for Web3 🚀\n\n@BNBCHAIN @stefanocintioli #BNBChain #Web3LatAm";
-  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`, '_blank', 'noopener');
+// ═══════════════════════════════════════
+//  CERTIFICATE SHARE
+// ═══════════════════════════════════════
+function shareCert() {
+  const tweet = LANG === 'es'
+    ? `🎓 ¡Completé el BNB Chain LatAm Learning Path!\n\n✅ Blockchain Basics\n✅ IA & Agentes de IA\n✅ Vibecoding\n\n9 lecciones. Listo/a para Web3 🚀\n\n@BNBChainLatAm #BNBChain #Web3LatAm\n${SITE_URL}`
+    : `🎓 I completed the BNB Chain LatAm Learning Path!\n\n✅ Blockchain Basics\n✅ AI & AI Agents\n✅ Vibecoding\n\n9 lessons. Ready for Web3 🚀\n\n@BNBChainLatAm #BNBChain #Web3LatAm\n${SITE_URL}`;
+  window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(tweet)}`, '_blank', 'noopener');
 }
 
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  setLang('es');
-  updateHomeProgress();
+  applyStrings();
+  updateHomeUI();
 });
 </script>
 </body>
