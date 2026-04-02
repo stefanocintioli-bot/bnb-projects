@@ -32,7 +32,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r dca-agent/requirements.txt
 
       - name: Run DCA Agent
         env:
@@ -46,9 +46,9 @@ jobs:
           CF_KV_API_TOKEN:     ${{ secrets.CF_KV_API_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            python dca_agent.py --dry-run
+            python dca-agent/dca_agent.py --dry-run
           else
-            python dca_agent.py
+            python dca-agent/dca_agent.py
           fi
 
       # If the job above fails for any reason, send a Telegram alert.
