@@ -3,8 +3,9 @@
 # Blockchain interaction
 web3==6.20.3
 
-# AI decision engine
-groq==0.11.0
+# AI decision engine — pinned to avoid httpx proxies kwarg conflict
+groq==0.9.0
+httpx==0.27.0
 
 # Telegram notifications (direct HTTP — no persistent bot needed)
 requests==2.32.3
