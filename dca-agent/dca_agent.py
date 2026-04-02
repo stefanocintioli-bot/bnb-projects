@@ -47,6 +47,7 @@ DCA_AMOUNT_BNB          = float(os.getenv("DCA_AMOUNT_BNB", "0.01"))
 GAS_THRESHOLD_GWEI      = int(os.getenv("GAS_THRESHOLD_GWEI", "20"))
 PRICE_CHANGE_THRESHOLD  = float(os.getenv("PRICE_CHANGE_THRESHOLD", "5.0"))  # percent
 MIN_LIQUIDITY_BNB       = float(os.getenv("MIN_LIQUIDITY_BNB", "1.0"))
+TOKEN_NAME              = os.getenv("TOKEN_NAME", "USDT (BSC Testnet)")
 
 # Cloudflare KV (optional — enables /status /history /nextrun /dryrun via Telegram bot)
 CF_ACCOUNT_ID      = os.getenv("CF_ACCOUNT_ID", "")
@@ -223,7 +224,24 @@ def write_kv(key: str, value) -> None:
 
 
 def persist_run(record: dict) -> None:
-    """Write last_run and prepend to history (capped at 5 entries) in KV."""
+    """Write last_run (with running totals) and update history (last 5) in KV."""
+    # Carry forward cumulative cycle counters from previous last_run
+    prev      = read_kv("last_run") or {}
+    prev_run  = int(prev.get("total_cycles_run",     0))
+    prev_skip = int(prev.get("total_cycles_skipped", 0))
+
+    status = record.get("status", "")
+    if status == "executed":
+        record["total_cycles_run"]     = prev_run + 1
+        record["total_cycles_skipped"] = prev_skip
+    elif status == "skipped":
+        record["total_cycles_run"]     = prev_run
+        record["total_cycles_skipped"] = prev_skip + 1
+    else:
+        # failed / dry_run — counters unchanged
+        record["total_cycles_run"]     = prev_run
+        record["total_cycles_skipped"] = prev_skip
+
     write_kv("last_run", record)
     existing = read_kv("history") or []
     if not isinstance(existing, list):
@@ -469,15 +487,19 @@ def main():
 
     # ── Base run record (persisted to KV after the cycle) ─────
     run_record = {
-        "status":      "pending",
-        "timestamp":   timestamp,
-        "tx_hash":     "",
-        "tx_url":      "",
-        "gas_gwei":    gas_result["value_gwei"],
-        "reserve_bnb": liq_result["reserve_bnb"],
-        "ai_reason":   decision["reason"],
-        "dry_run":     dry_run,
-        "amount_bnb":  DCA_AMOUNT_BNB,
+        "status":               "pending",
+        "timestamp":            timestamp,
+        "token_name":           TOKEN_NAME,
+        "token_address":        TARGET_TOKEN,
+        "amount_bnb":           DCA_AMOUNT_BNB,
+        "gas_gwei":             gas_result["value_gwei"],
+        "price_change_pct":     price_result["change_pct"],
+        "liquidity_bnb":        liq_result["reserve_bnb"],
+        "reason":               decision["reason"],
+        "tx_hash":              "",
+        "tx_url":               "",
+        "dry_run":              dry_run,
+        # total_cycles_run / total_cycles_skipped filled in by persist_run()
     }
 
     exit_code = 0

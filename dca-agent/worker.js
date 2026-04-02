@@ -2,9 +2,9 @@
  * BNB Chain DCA Agent — Cloudflare Worker
  * ─────────────────────────────────────────
  * Receives Telegram webhook POST requests and handles 4 interactive commands:
- *   /status   → last run result from KV
- *   /nextrun  → days until next scheduled run
- *   /history  → last 5 run results from KV
+ *   /status   → full agent dashboard from KV
+ *   /nextrun  → countdown to next scheduled run
+ *   /history  → last 5 runs from KV
  *   /dryrun   → triggers GitHub Actions workflow_dispatch with dry_run=true
  *
  * Required Worker secrets (set via: npx wrangler secret put <NAME>):
@@ -22,7 +22,6 @@
 
 export default {
   async fetch(request, env, ctx) {
-    // Only accept POST from Telegram
     if (request.method !== 'POST') {
       return new Response('DCA Agent Worker — OK', { status: 200 });
     }
@@ -33,7 +32,6 @@ export default {
       return new Response('Forbidden', { status: 403 });
     }
 
-    // Parse body — clone first so we can read it
     let body;
     try {
       body = await request.json();
@@ -83,17 +81,14 @@ async function handleUpdate(body, env) {
         break;
 
       case '/dryrun':
-        // Fire GitHub dispatch in background — reply immediately
-        env._ctx_waitUntil_dryrun = triggerDryRun(env); // stored for potential debug
-        replyText = '🤖 Dry run triggered, check Telegram in ~60s';
-        // Also actually kick it off:
         await triggerDryRun(env);
+        replyText = '🤖 Dry run triggered, check Telegram in ~60s';
         break;
 
       default:
         replyText =
           'Available commands:\n' +
-          '/status — last run result\n' +
+          '/status — full agent dashboard\n' +
           '/nextrun — countdown to next run\n' +
           '/history — last 5 runs\n' +
           '/dryrun — simulate this month\'s buy';
@@ -113,55 +108,82 @@ async function handleStatus(env) {
   const run = await env.DCA_KV.get('last_run', { type: 'json' });
 
   if (!run) {
-    return '📭 No runs recorded yet.\nThe agent writes here after its first GitHub Actions execution.';
+    return (
+      '🤖 <b>DCA Agent Status</b>\n\n' +
+      '📭 No runs recorded yet.\n' +
+      'The agent writes here after its first GitHub Actions execution.\n\n' +
+      handleNextRun()
+    );
   }
 
-  const statusIcon = {
+  // ── Status indicator ──────────────────────────────────────
+  const statusDot = {
+    executed: '🟢',
+    skipped:  '🟡',
+    failed:   '🔴',
+    dry_run:  '🔵',
+  }[run.status] ?? '⚪';
+
+  const resultIcon = {
     executed: '✅',
-    skipped:  '⏭️',
+    skipped:  '⚠️',
     failed:   '❌',
     dry_run:  '🔬',
   }[run.status] ?? '❓';
 
+  const resultLabel = {
+    executed: 'Executed',
+    skipped:  'Skipped',
+    failed:   'Failed',
+    dry_run:  'Dry run',
+  }[run.status] ?? run.status;
+
+  // ── Next run countdown ────────────────────────────────────
+  const { nextStr, countdown } = computeNextRun();
+
+  // ── Field reads with backward-compat fallbacks ────────────
+  const reason       = run.reason       ?? run.ai_reason   ?? '—';
+  const liquidityBnb = run.liquidity_bnb ?? run.reserve_bnb ?? 0;
+  const tokenName    = run.token_name   ?? 'USDT (BSC Testnet)';
+  const pricePct     = run.price_change_pct != null
+    ? `${Number(run.price_change_pct).toFixed(2)}%`
+    : '—';
+  const totalRun     = run.total_cycles_run     ?? '—';
+  const totalSkip    = run.total_cycles_skipped ?? '—';
+
+  const txLine = run.tx_hash
+    ? `<a href="${run.tx_url}">View on BscScan</a>`
+    : 'No tx yet';
+
   const dryTag = run.dry_run ? ' <i>(dry run)</i>' : '';
-  let text =
-    `${statusIcon} <b>Last DCA Run</b>${dryTag}\n` +
-    `📅 ${run.timestamp}\n` +
-    `Status: <b>${run.status}</b>\n` +
-    `⛽ Gas: <code>${run.gas_gwei} Gwei</code>\n` +
-    `💧 Liquidity: <code>${run.reserve_bnb} BNB</code>\n` +
-    `🤖 AI: <i>${escapeHtml(run.ai_reason)}</i>`;
 
-  if (run.tx_hash) {
-    text += `\n🔗 <a href="${run.tx_url}">View on BscScan</a>`;
-  }
-
-  return text;
+  return (
+    `🤖 <b>DCA Agent Status</b>\n\n` +
+    `${statusDot} Last run: ${run.timestamp}${dryTag}\n` +
+    `🪙 Token: ${escapeHtml(tokenName)}\n` +
+    `💰 Amount per cycle: <code>${run.amount_bnb} BNB</code>\n` +
+    `📅 Frequency: Monthly (1st of each month, 12:00 UTC)\n` +
+    `⏰ Next run: <b>${nextStr}</b> (in ${countdown})\n` +
+    `\n` +
+    `${resultIcon} Last result: <b>${resultLabel}</b>\n` +
+    `   <i>${escapeHtml(reason)}</i>\n` +
+    `\n` +
+    `⛽ Gas at last run: <code>${run.gas_gwei} Gwei</code>\n` +
+    `📊 Price change at last run: <code>${pricePct}</code>\n` +
+    `💧 Liquidity at last run: <code>${liquidityBnb} BNB</code>\n` +
+    `🔗 Last TX: ${txLine}\n` +
+    `\n` +
+    `📈 Total cycles run: <b>${totalRun}</b>\n` +
+    `📉 Total cycles skipped: <b>${totalSkip}</b>`
+  );
 }
 
 function handleNextRun() {
-  const now = new Date();
-  const y   = now.getUTCFullYear();
-  const m   = now.getUTCMonth(); // 0-11
-
-  // Next 1st of month at 12:00 UTC
-  let next = new Date(Date.UTC(y, m, 1, 12, 0, 0));
-  if (next <= now) {
-    // This month's run already passed — go to next month
-    next = new Date(Date.UTC(y, m + 1, 1, 12, 0, 0));
-  }
-
-  const msLeft    = next - now;
-  const daysLeft  = Math.floor(msLeft / 86_400_000);
-  const hoursLeft = Math.floor((msLeft % 86_400_000) / 3_600_000);
-  const minsLeft  = Math.floor((msLeft % 3_600_000)  / 60_000);
-
-  const nextStr = next.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
-
+  const { nextStr, countdown } = computeNextRun();
   return (
     `⏰ <b>Next DCA Run</b>\n` +
     `${nextStr}\n\n` +
-    `In <b>${daysLeft}d ${hoursLeft}h ${minsLeft}m</b>`
+    `In <b>${countdown}</b>`
   );
 }
 
@@ -172,14 +194,23 @@ async function handleHistory(env) {
     return '📭 No run history yet.';
   }
 
-  const icons = { executed: '✅', skipped: '⏭️', failed: '❌', dry_run: '🔬' };
+  const icons = { executed: '✅', skipped: '⚠️', failed: '❌', dry_run: '🔬' };
+  const labels = { executed: 'Bought', skipped: 'Skipped', failed: 'Failed', dry_run: 'Dry run' };
+
   const lines = history.map((run, i) => {
-    const icon   = icons[run.status] ?? '❓';
-    const dryTag = run.dry_run ? ' [dry]' : '';
-    const txLink = run.tx_hash
-      ? ` — <a href="${run.tx_url}">tx</a>`
-      : '';
-    return `${i + 1}. ${icon} <code>${run.timestamp}</code>${dryTag}${txLink}\n   <i>${escapeHtml(run.ai_reason.slice(0, 80))}</i>`;
+    const icon    = icons[run.status]  ?? '❓';
+    const label   = labels[run.status] ?? run.status;
+    const reason  = run.reason ?? run.ai_reason ?? '—';
+    const dryTag  = run.dry_run ? ' <i>[dry]</i>' : '';
+    const txLine  = run.tx_hash
+      ? `<a href="${run.tx_url}">BscScan</a>`
+      : '—';
+
+    return (
+      `<b>${run.timestamp}</b> — ${icon} ${label}${dryTag}\n` +
+      `Reason: <i>${escapeHtml(reason.slice(0, 100))}</i>\n` +
+      `TX: ${txLine}`
+    );
   });
 
   return `📜 <b>Last ${history.length} DCA Runs</b>\n\n` + lines.join('\n\n');
@@ -203,9 +234,26 @@ async function triggerDryRun(env) {
   });
 
   if (!resp.ok) {
-    const body = await resp.text();
-    throw new Error(`GitHub API ${resp.status}: ${body}`);
+    const errBody = await resp.text();
+    throw new Error(`GitHub API ${resp.status}: ${errBody}`);
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Shared next-run calculator
+// ─────────────────────────────────────────────────────────────
+function computeNextRun() {
+  const now = new Date();
+  let next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 12, 0, 0));
+  if (next <= now) {
+    next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 12, 0, 0));
+  }
+  const msLeft    = next - now;
+  const daysLeft  = Math.floor(msLeft / 86_400_000);
+  const hoursLeft = Math.floor((msLeft % 86_400_000) / 3_600_000);
+  const minsLeft  = Math.floor((msLeft % 3_600_000)  / 60_000);
+  const nextStr   = next.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+  return { nextStr, countdown: `${daysLeft}d ${hoursLeft}h ${minsLeft}m` };
 }
 
 // ─────────────────────────────────────────────────────────────
