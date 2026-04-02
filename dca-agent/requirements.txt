@@ -6,11 +6,8 @@ web3==6.20.3
 # AI decision engine
 groq==0.11.0
 
-# Telegram bot (v20+ with async support and built-in job queue)
-python-telegram-bot[job-queue]==21.6
+# Telegram notifications (direct HTTP — no persistent bot needed)
+requests==2.32.3
 
 # Environment variable loading
 python-dotenv==1.0.1
-
-# HTTP client (used by web3 and groq under the hood)
-requests==2.32.3

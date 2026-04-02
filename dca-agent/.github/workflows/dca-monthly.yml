@@ -1,0 +1,64 @@
+name: DCA Agent — Monthly Buy
+
+# Runs at 12:00 UTC on the 1st of every month.
+# Can also be triggered manually from the Actions tab.
+on:
+  schedule:
+    - cron: '0 12 1 * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run (simulate without swapping)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  dca-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run DCA Agent
+        env:
+          GROQ_API_KEY:        ${{ secrets.GROQ_API_KEY }}
+          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
+          WALLET_PRIVATE_KEY:  ${{ secrets.WALLET_PRIVATE_KEY }}
+          RPC_URL:             ${{ secrets.RPC_URL }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python dca_agent.py --dry-run
+          else
+            python dca_agent.py
+          fi
+
+      # If the job above fails for any reason, send a Telegram alert.
+      # This uses curl so it works even when Python dependencies can't be installed.
+      - name: Notify on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -s -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=❌ DCA Agent run FAILED ($(date -u '+%Y-%m-%d %H:%M UTC'))%0ACheck: ${RUN_URL}" \
+            -d "disable_web_page_preview=true"

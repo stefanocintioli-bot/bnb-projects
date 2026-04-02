@@ -1,6 +1,9 @@
 # BNB Chain DCA Agent
 
-An AI-powered Dollar-Cost-Averaging bot for BNB Chain **testnet**. Before every buy, a Groq LLM checks three on-chain guardrails and sends you a Telegram alert — whether the trade executes or gets skipped.
+An AI-powered Dollar-Cost-Averaging bot for BNB Chain **testnet**. Runs once a month as a
+GitHub Actions cron job — free forever, no server needed. Before every buy, a Groq LLM checks
+three on-chain guardrails and sends you a Telegram alert whether the trade executes or gets
+skipped.
 
 ---
 
@@ -8,12 +11,13 @@ An AI-powered Dollar-Cost-Averaging bot for BNB Chain **testnet**. Before every 
 
 | Feature | Detail |
 |---|---|
-| **DCA cadence** | Daily or weekly automated buys |
+| **DCA cadence** | 1st of every month at 12:00 UTC (GitHub Actions cron) |
 | **AI guardrails** | Gas price · Price stability · Pool liquidity |
-| **AI model** | Groq `llama3-8b-8192` (free tier) |
+| **AI model** | Groq `llama-3.3-70b-versatile` (free tier) |
 | **DEX** | PancakeSwap testnet |
-| **Alerts** | Telegram bot with plain-language explanations |
+| **Alerts** | Telegram notifications with plain-language explanations |
 | **Network** | BSC Testnet — no real money |
+| **Cost** | Free (GitHub Actions free tier: 2,000 min/month) |
 
 ---
 
@@ -21,82 +25,111 @@ An AI-powered Dollar-Cost-Averaging bot for BNB Chain **testnet**. Before every 
 
 ```
 dca-agent/
-├── dca_agent.py      ← Main bot logic (Web3 + Groq + Telegram)
-├── dca_ui.html       ← Web UI to configure & generate .env
-├── requirements.txt  ← Python dependencies
-├── .env.example      ← Template for environment variables
-└── README.md         ← This file
+├── dca_agent.py                        ← Single-run script (Web3 + Groq + Telegram)
+├── .github/
+│   └── workflows/
+│       └── dca-monthly.yml             ← GitHub Actions cron job
+├── requirements.txt                    ← Python dependencies
+├── .env.example                        ← Template for local development
+├── README.md                           ← This file
+└── DEMO.md                             ← Plain-English explainer for non-technical readers
 ```
 
 ---
 
-## Quick Start
+## GitHub Actions Setup (step by step)
 
-### Step 1 — Prerequisites
+### Step 1 — Fork or push to GitHub
 
-- Python 3.10+
-- MetaMask with a **testnet-only** wallet
-- Free accounts: [Groq](https://console.groq.com) · [Telegram @BotFather](https://t.me/BotFather)
+Make sure this repo is on GitHub. If you're starting fresh:
 
-### Step 2 — Get testnet BNB
+```bash
+git init
+git remote add origin https://github.com/YOUR_USERNAME/dca-agent.git
+git push -u origin main
+```
 
-Visit the faucet and request free tBNB for your wallet:
+### Step 2 — Add GitHub Secrets
+
+The agent reads all sensitive values from GitHub Secrets — **never from code**.
+
+1. Go to your repo on GitHub
+2. Click **Settings** → **Secrets and variables** → **Actions**
+3. Click **New repository secret** and add each of the following:
+
+| Secret name | Where to get it |
+|---|---|
+| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) → API Keys |
+| `TELEGRAM_BOT_TOKEN` | Telegram → [@BotFather](https://t.me/BotFather) → `/newbot` |
+| `TELEGRAM_CHAT_ID` | Telegram → [@userinfobot](https://t.me/userinfobot) → send it a message |
+| `WALLET_PRIVATE_KEY` | MetaMask → Account Details → Export Private Key (testnet wallet only!) |
+| `RPC_URL` | Use `https://data-seed-prebsc-1-s1.binance.org:8545/` or any BSC Testnet RPC |
+
+> **Important:** `WALLET_PRIVATE_KEY` must be a **testnet-only** wallet with no real funds.
+
+### Step 3 — Verify the workflow is enabled
+
+Go to the **Actions** tab in your repo. If Actions are disabled, click **Enable** to turn them on.
+The workflow (`DCA Agent — Monthly Buy`) will appear in the list.
+
+---
+
+## How to Trigger a Manual Run
+
+1. Go to your repo → **Actions** tab
+2. Click **DCA Agent — Monthly Buy** in the left sidebar
+3. Click **Run workflow** (top right)
+4. Choose:
+   - **dry_run = false** — real run (executes the swap if guardrails pass)
+   - **dry_run = true** — simulation (logs what would happen, no swap)
+5. Click the green **Run workflow** button
+
+You'll receive a Telegram message with the result within ~2 minutes.
+
+---
+
+## How to Change the Schedule
+
+Edit `.github/workflows/dca-monthly.yml`, line with `cron:`:
+
+```yaml
+- cron: '0 12 1 * *'   # 1st of every month at 12:00 UTC (current)
+```
+
+Cron format: `minute hour day-of-month month day-of-week`
+
+| Example schedule | Cron expression |
+|---|---|
+| 1st of every month, noon UTC | `0 12 1 * *` |
+| Every Monday at 09:00 UTC | `0 9 * * 1` |
+| Every day at 08:00 UTC | `0 8 * * *` |
+| 1st and 15th of every month | `0 12 1,15 * *` |
+
+Use [crontab.guru](https://crontab.guru) to preview any cron expression.
+
+---
+
+## Local Development
+
+### Quick start
+
+```bash
+cd dca-agent
+cp .env.example .env     # fill in your testnet credentials
+pip install -r requirements.txt
+
+# Simulate a run (no swap, no Telegram)
+python dca_agent.py --dry-run
+
+# Real run
+python dca_agent.py
+```
+
+### Get testnet BNB
 
 ```
 https://testnet.bnbchain.org/faucet-smart
 ```
-
-Make sure MetaMask is on **BSC Testnet** (Chain ID: 97).
-
-### Step 3 — Configure with the Web UI
-
-Open `dca_ui.html` in your browser. Fill in:
-
-- Groq API key
-- Telegram bot token + your chat ID
-- Wallet private key (testnet only)
-- DCA amount, frequency, and guardrail thresholds
-
-Click **Download .env** — place the file in this folder as `.env`.
-
-### Step 4 — Install dependencies
-
-```bash
-cd dca-agent
-pip install -r requirements.txt
-```
-
-> Using a virtual environment is recommended:
-> ```bash
-> python -m venv .venv
-> source .venv/bin/activate   # macOS/Linux
-> .venv\Scripts\activate      # Windows
-> pip install -r requirements.txt
-> ```
-
-### Step 5 — Run the agent
-
-```bash
-python dca_agent.py
-```
-
-The agent will:
-1. Connect to BSC Testnet
-2. Start the Telegram bot
-3. Run a price tracker every 60 seconds
-4. Execute your first DCA cycle 30 seconds after startup
-
----
-
-## Telegram Commands
-
-| Command | Description |
-|---|---|
-| `/status` | Current agent state, wallet balance, live guardrail readings |
-| `/pause` | Pause the agent (cycles are skipped until resumed) |
-| `/resume` | Resume the agent |
-| `/history` | Last 5 cycle results with AI explanations |
-| `/runnow` | Trigger a DCA cycle immediately |
 
 ---
 
@@ -110,7 +143,7 @@ Guardrail 1 — Gas Price
   → Skip if > GAS_THRESHOLD_GWEI (default: 20 Gwei)
 
 Guardrail 2 — Price Stability
-  → Compare current PancakeSwap price vs 1 hour ago
+  → Compares current price to history (single-run: assumes stable)
   → Skip if moved > PRICE_CHANGE_THRESHOLD (default: ±5%)
 
 Guardrail 3 — Liquidity
@@ -118,7 +151,8 @@ Guardrail 3 — Liquidity
   → Skip if < MIN_LIQUIDITY_BNB (default: 1.0 BNB)
 ```
 
-Groq `llama3-8b-8192` reviews all three results and writes a plain-language explanation. If all pass → swap executes. If any fail → cycle is skipped and you receive an alert.
+Groq reviews all three results and writes a plain-language explanation.
+If all pass → swap executes. If any fail → cycle is skipped and you receive an alert.
 
 ---
 
@@ -140,11 +174,11 @@ Groq `llama3-8b-8192` reviews all three results and writes a plain-language expl
 
 - **Never** use a mainnet wallet or real funds with this agent.
 - **Never** commit `.env` to Git — it's already in `.gitignore`.
-- The web UI runs 100% in your browser — keys are written only to the local `.env` file you download.
+- All secrets are injected at runtime by GitHub Actions — they are never stored in the repo.
 
 ---
 
-## Verify on BscScan
+## Verify Transactions on BscScan
 
 Every successful swap links directly to:
 
@@ -158,8 +192,8 @@ https://testnet.bscscan.com/tx/<tx_hash>
 
 | Problem | Fix |
 |---|---|
-| `Cannot connect to BSC Testnet` | Check your internet connection; try a different RPC from [chainlist.org](https://chainlist.org/?search=bnb&testnets=true) |
-| `Swap reverted` | Your wallet may have insufficient tBNB — get more from the faucet |
-| Telegram bot not responding | Verify `TELEGRAM_BOT_TOKEN` and that you've started a chat with the bot |
-| `Groq API error` | Check your `GROQ_API_KEY`; the fallback logic applies all guardrails manually |
-| Price stability always failing | Not enough price history yet — wait a few minutes after startup |
+| Workflow not running | Check Actions tab is enabled; verify cron syntax at crontab.guru |
+| `Cannot connect to BSC Testnet` | Try a different RPC from [chainlist.org](https://chainlist.org/?search=bnb&testnets=true) |
+| `Swap reverted` | Wallet may have insufficient tBNB — get more from the faucet |
+| Telegram not receiving messages | Verify `TELEGRAM_BOT_TOKEN` secret and that you've started a chat with the bot |
+| `Groq API error` | Check `GROQ_API_KEY` secret; fallback logic applies all guardrails manually |

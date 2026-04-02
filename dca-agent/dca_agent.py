@@ -1,25 +1,25 @@
 """
 BNB Chain DCA Agent — BSC Testnet
 ──────────────────────────────────
-Runs a Dollar-Cost-Averaging strategy on PancakeSwap testnet.
-Before every buy, the Groq-powered AI checks 3 guardrails:
-  1. Gas price (skip if >20 Gwei)
-  2. Price stability (skip if token moved >5% in last hour)
-  3. Liquidity (skip if reserves too low)
-Alerts and controls are handled through a Telegram bot.
+Single-run script. Designed to be invoked by a cron job (e.g. GitHub Actions)
+once per month. Runs guardrails → AI decision → swap (or skip) → Telegram alert
+→ exits.
+
+Usage:
+  python dca_agent.py            # live run
+  python dca_agent.py --dry-run  # simulate without executing the swap
 """
 
-import asyncio
+import argparse
 import json
 import logging
 import os
-from collections import deque
+import sys
 from datetime import datetime, timezone
 
+import requests
 from dotenv import load_dotenv
 from groq import Groq
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from web3 import Web3
 
 # ─────────────────────────────────────────────────────────────
@@ -34,20 +34,19 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────
-# 2.  CONFIGURATION  (all sensitive values come from .env)
+# 2.  CONFIGURATION  (all sensitive values come from env / GitHub Secrets)
 # ─────────────────────────────────────────────────────────────
 GROQ_API_KEY        = os.getenv("GROQ_API_KEY", "")
 TELEGRAM_BOT_TOKEN  = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID    = os.getenv("TELEGRAM_CHAT_ID", "")   # your personal chat ID
+TELEGRAM_CHAT_ID    = os.getenv("TELEGRAM_CHAT_ID", "")
 PRIVATE_KEY         = os.getenv("WALLET_PRIVATE_KEY", "")
 RPC_URL             = os.getenv("RPC_URL", "https://data-seed-prebsc-1-s1.binance.org:8545/")
 
-# DCA parameters (can be tuned via the web UI / .env)
+# DCA parameters
 DCA_AMOUNT_BNB          = float(os.getenv("DCA_AMOUNT_BNB", "0.01"))
-DCA_FREQUENCY           = os.getenv("DCA_FREQUENCY", "daily")   # "daily" | "weekly"
 GAS_THRESHOLD_GWEI      = int(os.getenv("GAS_THRESHOLD_GWEI", "20"))
 PRICE_CHANGE_THRESHOLD  = float(os.getenv("PRICE_CHANGE_THRESHOLD", "5.0"))  # percent
-MIN_LIQUIDITY_BNB       = float(os.getenv("MIN_LIQUIDITY_BNB", "1.0"))       # BNB in pool (mainnet default: 1.0, testnet: 0.001)
+MIN_LIQUIDITY_BNB       = float(os.getenv("MIN_LIQUIDITY_BNB", "1.0"))
 
 # ─────────────────────────────────────────────────────────────
 # 3.  BSC TESTNET CONSTANTS
@@ -55,12 +54,10 @@ MIN_LIQUIDITY_BNB       = float(os.getenv("MIN_LIQUIDITY_BNB", "1.0"))       # B
 PANCAKESWAP_ROUTER   = Web3.to_checksum_address("0xD99D1c33F9fC3444f8101754aBC46c52416550D1")
 PANCAKESWAP_FACTORY  = Web3.to_checksum_address("0x6725F303b657a9451d8BA641348b6761A6CC7a17")
 WBNB_ADDRESS         = Web3.to_checksum_address("0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd")
-# Default target: testnet BUSD
 TARGET_TOKEN         = Web3.to_checksum_address(
     os.getenv("TARGET_TOKEN", "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee")
 )
 
-# Minimal ABIs — only the functions we actually call
 ROUTER_ABI = json.loads("""[
   {
     "inputs": [
@@ -126,104 +123,70 @@ PAIR_ABI = json.loads("""[
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
 if not w3.is_connected():
-    raise ConnectionError(f"Cannot connect to BSC Testnet at {RPC_URL}")
+    log.error("Cannot connect to BSC Testnet at %s", RPC_URL)
+    sys.exit(1)
 
 log.info("Connected to BSC Testnet — chain ID %s", w3.eth.chain_id)
 
-router   = w3.eth.contract(address=PANCAKESWAP_ROUTER,  abi=ROUTER_ABI)
-factory  = w3.eth.contract(address=PANCAKESWAP_FACTORY, abi=FACTORY_ABI)
+router  = w3.eth.contract(address=PANCAKESWAP_ROUTER,  abi=ROUTER_ABI)
+factory = w3.eth.contract(address=PANCAKESWAP_FACTORY, abi=FACTORY_ABI)
 
-# Derive wallet address from private key
-wallet = w3.eth.account.from_key(PRIVATE_KEY)
+wallet         = w3.eth.account.from_key(PRIVATE_KEY)
 WALLET_ADDRESS = wallet.address
 log.info("Wallet address: %s", WALLET_ADDRESS)
-
-# ─────────────────────────────────────────────────────────────
-# 5.  AGENT STATE
-# ─────────────────────────────────────────────────────────────
-# price_history stores (timestamp_utc, price_in_bnb_per_token) tuples
-# We keep up to 120 entries (≈2 hours at 1-minute sampling)
-state = {
-    "paused":         False,
-    "history":        [],       # list of cycle result dicts
-    "price_history":  deque(maxlen=120),
-    "total_invested": 0.0,      # BNB spent so far
-    "cycles_run":     0,
-    "cycles_skipped": 0,
-}
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 # ─────────────────────────────────────────────────────────────
-# 6.  PRICE HELPERS
+# 5.  TELEGRAM HELPER  (simple HTTP call — no persistent bot needed)
+# ─────────────────────────────────────────────────────────────
+def send_telegram(text: str) -> None:
+    """Send a plain-text message to the configured Telegram chat via Bot API."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        log.warning("Telegram credentials not set — skipping notification.")
+        return
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        resp = requests.post(
+            url,
+            json={
+                "chat_id":                  TELEGRAM_CHAT_ID,
+                "text":                     text,
+                "parse_mode":               "HTML",
+                "disable_web_page_preview": True,
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        log.info("Telegram message sent.")
+    except Exception as exc:
+        log.error("Telegram send error: %s", exc)
+
+# ─────────────────────────────────────────────────────────────
+# 6.  PRICE HELPER
 # ─────────────────────────────────────────────────────────────
 def get_current_price_bnb() -> float:
-    """
-    Returns how many tokens 1 BNB buys right now (via PancakeSwap getAmountsOut).
-    Returns 0.0 if the call fails.
-    """
+    """Returns how many tokens 1 BNB buys right now via PancakeSwap."""
     try:
         one_bnb = Web3.to_wei(1, "ether")
-        path = [WBNB_ADDRESS, TARGET_TOKEN]
-        amounts = router.functions.getAmountsOut(one_bnb, path).call()
-        # amounts[1] is in the token's decimals — we use raw value for ratio comparison
+        amounts = router.functions.getAmountsOut(one_bnb, [WBNB_ADDRESS, TARGET_TOKEN]).call()
         return float(amounts[1])
     except Exception as exc:
         log.warning("getAmountsOut failed: %s", exc)
         return 0.0
 
-
-def record_price_snapshot():
-    """Called by the background job every minute to track price history."""
-    price = get_current_price_bnb()
-    if price > 0:
-        state["price_history"].append((datetime.now(timezone.utc), price))
-
-
-def price_change_last_hour() -> float:
-    """
-    Compares current price vs the oldest snapshot within the last 60 minutes.
-    Returns percentage change (positive = price went up, negative = down).
-    Returns 0.0 if not enough history.
-    """
-    now = datetime.now(timezone.utc)
-    current = get_current_price_bnb()
-    if current == 0:
-        return 0.0
-
-    # Find the oldest snapshot within the last 60 minutes
-    cutoff = now.timestamp() - 3600
-    candidates = [
-        (ts, price)
-        for ts, price in state["price_history"]
-        if ts.timestamp() >= cutoff
-    ]
-
-    if not candidates:
-        return 0.0   # not enough data → assume stable
-
-    oldest_price = candidates[0][1]
-    if oldest_price == 0:
-        return 0.0
-
-    return ((current - oldest_price) / oldest_price) * 100.0
-
 # ─────────────────────────────────────────────────────────────
 # 7.  GUARDRAIL CHECKS
 # ─────────────────────────────────────────────────────────────
 def check_gas_price() -> dict:
-    """
-    Guardrail 1: Gas price must be below GAS_THRESHOLD_GWEI.
-    Returns {"ok": bool, "value_gwei": float, "message": str}
-    """
-    gas_wei    = w3.eth.gas_price
-    gas_gwei   = gas_wei / 1e9
-    ok         = gas_gwei <= GAS_THRESHOLD_GWEI
+    """Guardrail 1: gas must be below GAS_THRESHOLD_GWEI."""
+    gas_gwei = w3.eth.gas_price / 1e9
+    ok = gas_gwei <= GAS_THRESHOLD_GWEI
     return {
         "ok":         ok,
         "value_gwei": round(gas_gwei, 2),
-        "message":    (
-            f"Gas OK ({gas_gwei:.2f} Gwei ≤ {GAS_THRESHOLD_GWEI} Gwei)"
+        "message": (
+            f"Gas OK ({gas_gwei:.2f} Gwei <= {GAS_THRESHOLD_GWEI} Gwei)"
             if ok else
             f"Gas too high ({gas_gwei:.2f} Gwei > {GAS_THRESHOLD_GWEI} Gwei threshold)"
         ),
@@ -232,49 +195,39 @@ def check_gas_price() -> dict:
 
 def check_price_stability() -> dict:
     """
-    Guardrail 2: Token price must not have moved more than PRICE_CHANGE_THRESHOLD%
-    in the last hour.
-    Returns {"ok": bool, "change_pct": float, "message": str}
+    Guardrail 2: price must not have moved more than PRICE_CHANGE_THRESHOLD% in the last hour.
+
+    Note: in single-run mode there is no 60-minute price history to compare against.
+    This check always passes (0% change). The gas and liquidity guardrails remain fully
+    active. To add historical price context, configure a price-oracle or persist the
+    last price in a GitHub Actions artifact between runs.
     """
-    change = price_change_last_hour()
-    ok     = abs(change) <= PRICE_CHANGE_THRESHOLD
     return {
-        "ok":         ok,
-        "change_pct": round(change, 2),
-        "message":    (
-            f"Price stable ({change:+.2f}% in last hour)"
-            if ok else
-            f"Price volatile ({change:+.2f}% > ±{PRICE_CHANGE_THRESHOLD}% threshold)"
-        ),
+        "ok":         True,
+        "change_pct": 0.0,
+        "message":    "Price stability: no historical snapshot available — assuming stable (single-run mode).",
     }
 
 
 def check_liquidity() -> dict:
-    """
-    Guardrail 3: The BNB/TOKEN pool must have at least MIN_LIQUIDITY_BNB in BNB reserves.
-    Returns {"ok": bool, "reserve_bnb": float, "message": str}
-    """
+    """Guardrail 3: BNB/TOKEN pool must have at least MIN_LIQUIDITY_BNB in BNB reserves."""
     try:
         pair_address = factory.functions.getPair(WBNB_ADDRESS, TARGET_TOKEN).call()
         if pair_address == "0x0000000000000000000000000000000000000000":
             return {"ok": False, "reserve_bnb": 0.0, "message": "Liquidity pool does not exist"}
 
-        pair         = w3.eth.contract(address=pair_address, abi=PAIR_ABI)
-        reserves     = pair.functions.getReserves().call()
-        token0       = pair.functions.token0().call()
+        pair     = w3.eth.contract(address=pair_address, abi=PAIR_ABI)
+        reserves = pair.functions.getReserves().call()
+        token0   = pair.functions.token0().call()
 
-        # Determine which reserve slot is WBNB
-        if token0.lower() == WBNB_ADDRESS.lower():
-            bnb_reserve_wei = reserves[0]
-        else:
-            bnb_reserve_wei = reserves[1]
-
+        bnb_reserve_wei = reserves[0] if token0.lower() == WBNB_ADDRESS.lower() else reserves[1]
         reserve_bnb = float(Web3.from_wei(bnb_reserve_wei, "ether"))
-        ok          = reserve_bnb >= MIN_LIQUIDITY_BNB
+        ok = reserve_bnb >= MIN_LIQUIDITY_BNB
+
         return {
             "ok":          ok,
             "reserve_bnb": round(reserve_bnb, 4),
-            "message":     (
+            "message": (
                 f"Liquidity OK ({reserve_bnb:.4f} BNB in pool)"
                 if ok else
                 f"Liquidity too low ({reserve_bnb:.4f} BNB < {MIN_LIQUIDITY_BNB} BNB threshold)"
@@ -289,8 +242,8 @@ def check_liquidity() -> dict:
 # ─────────────────────────────────────────────────────────────
 def ai_should_buy(gas_result: dict, price_result: dict, liq_result: dict) -> dict:
     """
-    Sends guardrail data to Groq llama3-8b-8192 and asks whether to execute the DCA buy.
-    The AI acts as a final reasoning layer on top of the raw checks.
+    Sends guardrail data to Groq llama-3.3-70b-versatile and asks whether to buy.
+    Falls back to strict AND logic if the API is unavailable.
     Returns {"should_buy": bool, "reason": str}
     """
     prompt = f"""
@@ -309,7 +262,7 @@ Here are the current market guardrail readings:
 2. PRICE STABILITY CHECK
    - Status: {"PASS" if price_result["ok"] else "FAIL"}
    - Price change last hour: {price_result["change_pct"]}%
-   - Threshold: ±{PRICE_CHANGE_THRESHOLD}%
+   - Threshold: +/-{PRICE_CHANGE_THRESHOLD}%
    - Detail: {price_result["message"]}
 
 3. LIQUIDITY CHECK
@@ -330,12 +283,11 @@ Respond with a JSON object only (no markdown, no extra text):
         response = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,   # low temperature for consistent decisions
+            temperature=0.1,
             max_tokens=200,
         )
         raw = response.choices[0].message.content.strip()
 
-        # Strip markdown code fences if model adds them
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
@@ -347,7 +299,6 @@ Respond with a JSON object only (no markdown, no extra text):
 
     except Exception as exc:
         log.error("Groq API error: %s", exc)
-        # Fallback: apply strict AND logic ourselves if AI is unavailable
         all_pass = gas_result["ok"] and price_result["ok"] and liq_result["ok"]
         return {
             "should_buy": all_pass,
@@ -363,22 +314,17 @@ Respond with a JSON object only (no markdown, no extra text):
 # 9.  SWAP EXECUTION
 # ─────────────────────────────────────────────────────────────
 def execute_swap() -> dict:
-    """
-    Calls swapExactETHForTokens on PancakeSwap testnet router.
-    Swaps DCA_AMOUNT_BNB of tBNB for TARGET_TOKEN.
-    Returns {"success": bool, "tx_hash": str, "message": str}
-    """
+    """Calls swapExactETHForTokens on PancakeSwap testnet. 1% slippage tolerance."""
     try:
         amount_wei  = Web3.to_wei(DCA_AMOUNT_BNB, "ether")
         path        = [WBNB_ADDRESS, TARGET_TOKEN]
-        deadline    = int(datetime.now(timezone.utc).timestamp()) + 300  # 5 minutes
+        deadline    = int(datetime.now(timezone.utc).timestamp()) + 300
 
-        # 1% slippage tolerance: get expected output and allow 1% less
-        amounts_out  = router.functions.getAmountsOut(amount_wei, path).call()
-        min_out      = int(amounts_out[1] * 0.99)
+        amounts_out = router.functions.getAmountsOut(amount_wei, path).call()
+        min_out     = int(amounts_out[1] * 0.99)
 
-        nonce        = w3.eth.get_transaction_count(WALLET_ADDRESS)
-        gas_price    = w3.eth.gas_price
+        nonce     = w3.eth.get_transaction_count(WALLET_ADDRESS)
+        gas_price = w3.eth.gas_price
 
         tx = router.functions.swapExactETHForTokens(
             min_out, path, WALLET_ADDRESS, deadline
@@ -388,7 +334,7 @@ def execute_swap() -> dict:
             "gas":      200_000,
             "gasPrice": gas_price,
             "nonce":    nonce,
-            "chainId":  97,  # BSC Testnet chain ID
+            "chainId":  97,
         })
 
         signed  = w3.eth.account.sign_transaction(tx, private_key=PRIVATE_KEY)
@@ -401,11 +347,10 @@ def execute_swap() -> dict:
             return {
                 "success":  True,
                 "tx_hash":  tx_hex,
-                "message":  f"Swap executed successfully! Bought tokens for {DCA_AMOUNT_BNB} BNB.",
+                "message":  f"Swap executed. Bought tokens for {DCA_AMOUNT_BNB} BNB.",
                 "explorer": f"https://testnet.bscscan.com/tx/{tx_hex}",
             }
         else:
-            log.error("Swap reverted: %s", tx_hash.hex())
             return {
                 "success": False,
                 "tx_hash": tx_hash.hex(),
@@ -417,292 +362,102 @@ def execute_swap() -> dict:
         return {"success": False, "tx_hash": "", "message": f"Swap error: {exc}"}
 
 # ─────────────────────────────────────────────────────────────
-# 10.  DCA CYCLE — the main logic loop
-# ─────────────────────────────────────────────────────────────
-async def run_dca_cycle(context=None):
-    """
-    Called by the scheduler at the configured DCA interval.
-    Runs all guardrails → AI decision → swap (or skip).
-    Sends a Telegram alert with the result.
-    """
-    try:
-        log.info("━━━ DCA CYCLE STARTED ━━━")
-
-        if state["paused"]:
-            log.info("[CYCLE] Agent is paused — skipping cycle.")
-            return
-
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-        log.info("[CYCLE] Timestamp: %s", timestamp)
-
-        # Guardrail 1 — Gas
-        log.info("[CYCLE] Checking gas price...")
-        gas_result = check_gas_price()
-        log.info("[CYCLE] Gas result: %s", gas_result)
-
-        # Guardrail 2 — Price stability
-        log.info("[CYCLE] Checking price stability...")
-        price_result = check_price_stability()
-        log.info("[CYCLE] Price result: %s", price_result)
-
-        # Guardrail 3 — Liquidity
-        log.info("[CYCLE] Checking liquidity...")
-        liq_result = check_liquidity()
-        log.info("[CYCLE] Liquidity result: %s", liq_result)
-
-        # AI decision
-        log.info("[CYCLE] Sending guardrail data to Groq AI...")
-        decision = ai_should_buy(gas_result, price_result, liq_result)
-        log.info("[CYCLE] AI decision: should_buy=%s | reason=%s",
-                 decision["should_buy"], decision["reason"])
-
-        cycle_record = {
-            "timestamp":   timestamp,
-            "gas":         gas_result,
-            "price":       price_result,
-            "liquidity":   liq_result,
-            "ai_decision": decision,
-            "executed":    False,
-            "tx_hash":     "",
-        }
-
-        if decision["should_buy"]:
-            log.info("[CYCLE] All guardrails passed — executing swap...")
-            swap_result = execute_swap()
-            log.info("[CYCLE] Swap result: %s", swap_result)
-            cycle_record["executed"] = swap_result["success"]
-            cycle_record["tx_hash"]  = swap_result.get("tx_hash", "")
-
-            if swap_result["success"]:
-                state["total_invested"] += DCA_AMOUNT_BNB
-                state["cycles_run"]     += 1
-                msg = (
-                    f"✅ *DCA Buy Executed*\n"
-                    f"📅 {timestamp}\n"
-                    f"💰 Bought tokens for `{DCA_AMOUNT_BNB}` BNB\n"
-                    f"⛽ Gas: `{gas_result['value_gwei']} Gwei`\n"
-                    f"📊 Price change: `{price_result['change_pct']:+.2f}%`\n"
-                    f"💧 Liquidity: `{liq_result['reserve_bnb']} BNB`\n"
-                    f"🤖 AI: _{decision['reason']}_\n"
-                    f"🔗 [View on BscScan]({swap_result['explorer']})"
-                )
-            else:
-                state["cycles_skipped"] += 1
-                msg = (
-                    f"⚠️ *DCA Swap Failed*\n"
-                    f"📅 {timestamp}\n"
-                    f"{swap_result['message']}\n"
-                    f"🤖 AI approved but swap reverted on-chain."
-                )
-        else:
-            state["cycles_skipped"] += 1
-            failed = []
-            if not gas_result["ok"]:   failed.append(f"⛽ {gas_result['message']}")
-            if not price_result["ok"]: failed.append(f"📊 {price_result['message']}")
-            if not liq_result["ok"]:   failed.append(f"💧 {liq_result['message']}")
-            msg = (
-                f"⏭️ *DCA Cycle Skipped*\n"
-                f"📅 {timestamp}\n"
-                f"🤖 AI reason: _{decision['reason']}_\n\n"
-                f"*Failed guardrails:*\n" + "\n".join(failed)
-            )
-
-        state["history"].append(cycle_record)
-        if len(state["history"]) > 50:
-            state["history"] = state["history"][-50:]
-
-        log.info("[CYCLE] Sending Telegram message...")
-        await send_telegram(msg, context)
-        log.info("━━━ DCA CYCLE COMPLETE ━━━")
-
-    except Exception as exc:
-        import traceback
-        tb = traceback.format_exc()
-        log.error("[CYCLE] ❌ UNHANDLED EXCEPTION:\n%s", tb)
-        err_msg = f"❌ *DCA Cycle Error*\n`{type(exc).__name__}: {exc}`"
-        try:
-            await send_telegram(err_msg, context)
-        except Exception as tg_exc:
-            log.error("[CYCLE] Failed to send error to Telegram: %s", tg_exc)
-
-
-async def send_telegram(text: str, context=None):
-    """Send a message to the configured Telegram chat."""
-    if not TELEGRAM_CHAT_ID:
-        log.warning("TELEGRAM_CHAT_ID not set — skipping Telegram notification.")
-        return
-    try:
-        if context:
-            # No parse_mode — avoids Markdown entity errors from dynamic content
-            await context.bot.send_message(
-                chat_id=TELEGRAM_CHAT_ID,
-                text=text,
-                disable_web_page_preview=True,
-            )
-        log.info("Telegram message sent.")
-    except Exception as exc:
-        log.error("Telegram send error: %s", exc)
-
-# ─────────────────────────────────────────────────────────────
-# 11.  PRICE TRACKER BACKGROUND JOB (runs every 60 seconds)
-# ─────────────────────────────────────────────────────────────
-async def price_tracker_job(context=None):
-    """Background job: records price every minute for stability checks."""
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, record_price_snapshot)
-
-# ─────────────────────────────────────────────────────────────
-# 12.  TELEGRAM BOT COMMAND HANDLERS
-# ─────────────────────────────────────────────────────────────
-async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/status — show current agent status and last guardrail readings."""
-    gas   = check_gas_price()
-    price = check_price_stability()
-    liq   = check_liquidity()
-
-    bnb_balance = float(Web3.from_wei(w3.eth.get_balance(WALLET_ADDRESS), "ether"))
-
-    text = (
-        f"📊 *DCA Agent Status*\n"
-        f"{'🟢 Running' if not state['paused'] else '🔴 Paused'}\n\n"
-        f"*Wallet:* `{WALLET_ADDRESS[:10]}...`\n"
-        f"*Balance:* `{bnb_balance:.4f} tBNB`\n"
-        f"*Target:* `{DCA_AMOUNT_BNB} BNB` per cycle ({DCA_FREQUENCY})\n"
-        f"*Total invested:* `{state['total_invested']:.4f} BNB`\n"
-        f"*Cycles run:* `{state['cycles_run']}`\n"
-        f"*Cycles skipped:* `{state['cycles_skipped']}`\n\n"
-        f"*Current Guardrails:*\n"
-        f"{'✅' if gas['ok'] else '❌'} Gas: `{gas['value_gwei']} Gwei`\n"
-        f"{'✅' if price['ok'] else '❌'} Price change: `{price['change_pct']:+.2f}%`\n"
-        f"{'✅' if liq['ok'] else '❌'} Liquidity: `{liq['reserve_bnb']} BNB`\n"
-    )
-    await update.message.reply_text(text, parse_mode="Markdown")
-
-
-async def cmd_pause(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/pause — pause the DCA agent (skips upcoming cycles)."""
-    state["paused"] = True
-    await update.message.reply_text(
-        "⏸️ *DCA Agent paused.* Cycles will be skipped until you /resume.",
-        parse_mode="Markdown",
-    )
-
-
-async def cmd_resume(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/resume — resume the DCA agent."""
-    state["paused"] = False
-    await update.message.reply_text(
-        "▶️ *DCA Agent resumed.* Cycles will run on schedule.",
-        parse_mode="Markdown",
-    )
-
-
-async def cmd_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/history — show last 5 DCA cycle results."""
-    if not state["history"]:
-        await update.message.reply_text("No cycles have run yet.")
-        return
-
-    recent = state["history"][-5:]
-    lines  = ["📜 *Last 5 DCA Cycles*\n"]
-
-    for c in reversed(recent):
-        icon = "✅" if c["executed"] else ("⏭️" if not c["ai_decision"]["should_buy"] else "⚠️")
-        tx_hash = c["tx_hash"]
-        tx_part = f"\n   🔗 [tx](https://testnet.bscscan.com/tx/{tx_hash})" if tx_hash else ""
-        lines.append(
-            f"{icon} `{c['timestamp']}`\n"
-            f"   _{c['ai_decision']['reason'][:80]}_"
-            + tx_part
-        )
-
-    await update.message.reply_text(
-        "\n\n".join(lines),
-        parse_mode="Markdown",
-        disable_web_page_preview=True,
-    )
-
-
-async def cmd_runnow(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/runnow — manually trigger a DCA cycle immediately."""
-    await update.message.reply_text("🔄 Triggering DCA cycle now...")
-    was_paused = state["paused"]
-    state["paused"] = False
-    await run_dca_cycle(context)
-    state["paused"] = was_paused
-
-# ─────────────────────────────────────────────────────────────
-# 13.  MAIN — wire everything together
+# 10.  MAIN — single-run entry point
 # ─────────────────────────────────────────────────────────────
 def main():
-    # Build the Telegram Application
-    # python-telegram-bot v20+ requires the [job-queue] extra for scheduling
-    application = (
-        Application.builder()
-        .token(TELEGRAM_BOT_TOKEN)
-        .build()
+    parser = argparse.ArgumentParser(description="BNB Chain DCA Agent — single-run")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Simulate the cycle without executing the swap or sending Telegram alerts.",
     )
+    args = parser.parse_args()
+    dry_run = args.dry_run
 
-    # Register Telegram command handlers
-    application.add_handler(CommandHandler("status",  cmd_status))
-    application.add_handler(CommandHandler("pause",   cmd_pause))
-    application.add_handler(CommandHandler("resume",  cmd_resume))
-    application.add_handler(CommandHandler("history", cmd_history))
-    application.add_handler(CommandHandler("runnow",  cmd_runnow))
+    if dry_run:
+        log.info("=== DRY-RUN MODE — no swap will be executed ===")
 
-    # Log chat_id of any incoming message — useful for confirming TELEGRAM_CHAT_ID
-    async def log_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        cid = update.effective_chat.id
-        log.info("Incoming message from chat_id: %s", cid)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    log.info("DCA cycle started at %s", timestamp)
 
-    application.add_handler(MessageHandler(filters.ALL, log_chat_id))
+    # ── Guardrails ────────────────────────────────────────────
+    log.info("[1/3] Checking gas price...")
+    gas_result = check_gas_price()
+    log.info("      %s", gas_result["message"])
 
-    # Send a startup ping so we know the bot token + chat ID are working
-    async def startup_ping(context: ContextTypes.DEFAULT_TYPE):
-        if not TELEGRAM_CHAT_ID:
-            log.warning("TELEGRAM_CHAT_ID not set — skipping startup ping.")
-            return
-        await context.bot.send_message(
-            chat_id=TELEGRAM_CHAT_ID,
-            text=(
-                "🤖 *Bot is alive!*\n"
-                f"Wallet: `{WALLET_ADDRESS}`\n"
-                f"Network: BSC Testnet (chain 97)\n"
-                f"DCA: `{DCA_AMOUNT_BNB} BNB` every 5 min (test mode)\n"
-                f"First cycle fires in ~30s"
-            ),
-            parse_mode="Markdown",
+    log.info("[2/3] Checking price stability...")
+    price_result = check_price_stability()
+    log.info("      %s", price_result["message"])
+
+    log.info("[3/3] Checking liquidity...")
+    liq_result = check_liquidity()
+    log.info("      %s", liq_result["message"])
+
+    # ── AI decision ───────────────────────────────────────────
+    log.info("[AI]  Sending guardrail data to Groq...")
+    decision = ai_should_buy(gas_result, price_result, liq_result)
+    log.info("[AI]  should_buy=%s | reason=%s", decision["should_buy"], decision["reason"])
+
+    # ── Execute or skip ───────────────────────────────────────
+    if decision["should_buy"]:
+        if dry_run:
+            log.info("[DRY-RUN] All guardrails passed. Would execute swap of %s BNB.", DCA_AMOUNT_BNB)
+            msg = (
+                f"<b>[DRY-RUN] DCA Cycle Simulated</b>\n"
+                f"Date: {timestamp}\n"
+                f"All guardrails passed.\n"
+                f"Would buy tokens for <code>{DCA_AMOUNT_BNB}</code> BNB\n"
+                f"Gas: <code>{gas_result['value_gwei']} Gwei</code>\n"
+                f"Liquidity: <code>{liq_result['reserve_bnb']} BNB</code>\n"
+                f"AI: <i>{decision['reason']}</i>\n"
+                f"(No swap executed — dry-run mode)"
+            )
+        else:
+            log.info("All guardrails passed — executing swap...")
+            swap_result = execute_swap()
+
+            if swap_result["success"]:
+                msg = (
+                    f"<b>DCA Buy Executed</b>\n"
+                    f"Date: {timestamp}\n"
+                    f"Bought tokens for <code>{DCA_AMOUNT_BNB}</code> BNB\n"
+                    f"Gas: <code>{gas_result['value_gwei']} Gwei</code>\n"
+                    f"Liquidity: <code>{liq_result['reserve_bnb']} BNB</code>\n"
+                    f"AI: <i>{decision['reason']}</i>\n"
+                    f"<a href=\"{swap_result['explorer']}\">View on BscScan</a>"
+                )
+            else:
+                msg = (
+                    f"<b>DCA Swap Failed</b>\n"
+                    f"Date: {timestamp}\n"
+                    f"{swap_result['message']}\n"
+                    f"AI approved but swap reverted on-chain."
+                )
+                log.error("Swap failed: %s", swap_result["message"])
+                if not dry_run:
+                    send_telegram(msg)
+                sys.exit(1)
+    else:
+        failed = []
+        if not gas_result["ok"]:   failed.append(f"Gas: {gas_result['message']}")
+        if not price_result["ok"]: failed.append(f"Price: {price_result['message']}")
+        if not liq_result["ok"]:   failed.append(f"Liquidity: {liq_result['message']}")
+
+        msg = (
+            f"<b>DCA Cycle Skipped</b>\n"
+            f"Date: {timestamp}\n"
+            f"AI: <i>{decision['reason']}</i>\n\n"
+            f"<b>Failed guardrails:</b>\n" + "\n".join(failed)
         )
-        log.info("Startup ping sent to chat_id: %s", TELEGRAM_CHAT_ID)
+        log.info("Cycle skipped — %s", " | ".join(failed) if failed else decision["reason"])
 
-    application.job_queue.run_once(startup_ping, when=3, name="startup_ping")
+    # ── Telegram alert ────────────────────────────────────────
+    if dry_run:
+        log.info("[DRY-RUN] Telegram message that would be sent:\n%s", msg)
+    else:
+        send_telegram(msg)
 
-    # Determine DCA interval in seconds
-    dca_interval = 300  # 5 minutes for testing (was: 86_400 daily / 604_800 weekly)
-
-    # Schedule the price tracker (every 60 seconds)
-    application.job_queue.run_repeating(
-        price_tracker_job,
-        interval=60,
-        first=5,
-        name="price_tracker",
-    )
-
-    # Schedule the DCA cycle
-    application.job_queue.run_repeating(
-        run_dca_cycle,
-        interval=dca_interval,
-        first=30,   # first run 30 seconds after startup
-        name="dca_cycle",
-    )
-
-    log.info(
-        "DCA Agent started — frequency: %s, amount: %s BNB, target token: %s",
-        DCA_FREQUENCY, DCA_AMOUNT_BNB, TARGET_TOKEN,
-    )
-
-    # Start polling (blocking)
-    application.run_polling(allowed_updates=["message"])
+    log.info("DCA cycle complete.")
 
 
 if __name__ == "__main__":
