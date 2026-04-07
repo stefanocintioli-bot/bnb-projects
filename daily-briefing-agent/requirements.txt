@@ -1,0 +1,9 @@
+# Daily Intelligence Briefing Agent — pinned dependencies
+# Pinned to avoid version conflicts (learned from dca-agent groq/httpx issue)
+
+groq==0.9.0
+httpx==0.25.2
+feedparser==6.0.11
+yfinance==0.2.54
+requests==2.31.0
+python-telegram-bot==20.7
