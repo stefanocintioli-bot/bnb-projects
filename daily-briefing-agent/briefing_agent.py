@@ -66,7 +66,14 @@ Your job is to produce a daily briefing that makes him sharper in three areas:
 3. His long-term thinking (technology trends, AI, ideas worth sitting with)
 
 You are NOT a news summarizer. You are an analyst. Connect dots. Flag what's relevant to LatAm specifically.
-Be direct, precise, and brief. Max 5 minutes to read. No filler. No hype."""
+Be direct, precise, and brief. Max 5 minutes to read. No filler. No hype.
+
+RULES — follow these without exception:
+1. Never write generic recommendations ("X should focus on Y", "builders should consider Z").
+   Only write specific observations and their concrete implications. If it could apply to anyone, cut it.
+2. The IDEA OF THE DAY must never be a work task or productivity tip.
+   It must be a geopolitical, philosophical, or strategic observation that connects something in today's
+   news to a bigger pattern. One sharp question or provocation. Max 3 sentences."""
 
 
 # ── PRICE FETCHING ────────────────────────────────────────────────────────────
@@ -109,37 +116,73 @@ def fetch_crypto_prices():
         return {"BTC": None, "ETH": None, "BNB": None}
 
 
+def _fetch_stooq(name):
+    """
+    Fallback price fetch from stooq.com — free delayed data, no API key required.
+    Returns {"price": float, "change": float} or None on failure.
+    stooq returns daily CSV: Date,Open,High,Low,Close,Volume
+    """
+    stooq_symbols = {
+        "SP500": "%5Espx",   # ^spx  (S&P 500)
+        "Gold":  "gc.f",     # Gold futures
+        "DXY":   "dx.f",     # DXY (Dollar Index futures)
+    }
+    symbol = stooq_symbols.get(name)
+    if not symbol:
+        return None
+    try:
+        url = f"https://stooq.com/q/d/l/?s={symbol}&i=d"
+        resp = requests.get(
+            url, timeout=10, headers={"User-Agent": "Mozilla/5.0"}
+        )
+        lines = [l for l in resp.text.strip().split("\n") if l and not l.startswith("Date")]
+        if len(lines) >= 2:
+            current  = float(lines[-1].split(",")[4])   # Close
+            previous = float(lines[-2].split(",")[4])
+            change   = ((current - previous) / previous) * 100
+            return {"price": current, "change": change}
+        elif len(lines) == 1:
+            return {"price": float(lines[-1].split(",")[4]), "change": None}
+    except Exception:
+        pass
+    return None
+
+
 def fetch_tradfi_prices():
     """
-    Fetch S&P 500, Gold, DXY from Yahoo Finance via yfinance.
-    Uses 2-day history to compute 24h change %.
-    Returns dict with price + change, or None if the ticker fails.
+    Fetch S&P 500, Gold, DXY. Tries yfinance first; falls back to stooq.com.
+    Both are free with no API key required.
+    Returns dict with price + change per asset, or None if both sources fail.
     """
-    tickers = {
+    yf_symbols = {
         "SP500": "^GSPC",
         "Gold":  "GC=F",
         "DXY":   "DX-Y.NYB",
     }
     results = {}
 
-    for name, symbol in tickers.items():
+    for name, symbol in yf_symbols.items():
+        data = None
+
+        # Primary: yfinance
         try:
-            ticker = yf.Ticker(symbol)
-            hist = ticker.history(period="5d")  # 5d to handle weekends/holidays
-
+            hist = yf.Ticker(symbol).history(period="5d")
             if len(hist) >= 2:
-                current  = hist["Close"].iloc[-1]
-                previous = hist["Close"].iloc[-2]
-                change   = ((current - previous) / previous) * 100
-                results[name] = {"price": float(current), "change": float(change)}
+                current  = float(hist["Close"].iloc[-1])
+                previous = float(hist["Close"].iloc[-2])
+                data = {"price": current, "change": ((current - previous) / previous) * 100}
             elif len(hist) == 1:
-                results[name] = {"price": float(hist["Close"].iloc[-1]), "change": None}
-            else:
-                results[name] = None
+                data = {"price": float(hist["Close"].iloc[-1]), "change": None}
+        except Exception:
+            pass
 
-        except Exception as e:
-            print(f"⚠️  {name} ({symbol}) failed: {e}")
-            results[name] = None
+        # Fallback: stooq.com
+        if data is None:
+            data = _fetch_stooq(name)
+            if data:
+                print(f"   {name}: yfinance failed, stooq fallback used")
+
+        results[name] = data
 
     print("✅ TradFi prices fetched")
     return results
@@ -172,7 +215,17 @@ def format_price_line(crypto, tradfi):
     dxy   = fmt("DXY",  tradfi.get("DXY"),   dollar=False, decimals=2)
 
     crypto_row = f"{btc}  ·  {eth}  ·  {bnb}"
-    tradfi_row = f"{sp500}  ·  {gold}  ·  {dxy}"
+
+    # If all three tradfi sources failed (both yfinance + stooq), markets are likely closed
+    all_tradfi_failed = all(
+        tradfi.get(k) is None for k in ("SP500", "Gold", "DXY")
+    )
+    tradfi_row = (
+        "S&P · Gold · DXY — markets closed"
+        if all_tradfi_failed
+        else f"{sp500}  ·  {gold}  ·  {dxy}"
+    )
+
     return f"{crypto_row}\n{tradfi_row}"
 
 
