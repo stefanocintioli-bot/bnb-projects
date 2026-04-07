@@ -147,29 +147,137 @@ def fetch_tradfi_prices():
 
 def format_price_line(crypto, tradfi):
     """
-    Render a single compact price line for the briefing header.
-    Example: BTC: $83,200 (+1.2%) | ETH: $1,580 | BNB: $590 | S&P: 5,200 | Gold: $3,100 | DXY: 103.4
+    Render two price rows — crypto on top, tradfi below.
+    Uses ↑/↓ arrows and dot separators for cleaner readability.
+    Returns a single string with a newline between the two rows.
     """
 
     def fmt(label, data, dollar=True, decimals=0):
         if not data or data.get("price") is None:
-            return f"{label}: N/A"
+            return f"{label} –"
         price = data["price"]
         fmt_price = (
             f"${price:,.{decimals}f}" if dollar else f"{price:,.{decimals}f}"
         )
         if data.get("change") is not None:
-            return f"{label}: {fmt_price} ({data['change']:+.1f}%)"
-        return f"{label}: {fmt_price}"
+            arrow = "↑" if data["change"] >= 0 else "↓"
+            return f"{label} {fmt_price} {arrow}{abs(data['change']):.1f}%"
+        return f"{label} {fmt_price}"
 
-    btc   = fmt("BTC",   crypto.get("BTC"),  dollar=True,  decimals=0)
-    eth   = fmt("ETH",   crypto.get("ETH"),  dollar=True,  decimals=0)
-    bnb   = fmt("BNB",   crypto.get("BNB"),  dollar=True,  decimals=1)
-    sp500 = fmt("S&P",   tradfi.get("SP500"), dollar=False, decimals=0)
-    gold  = fmt("Gold",  tradfi.get("Gold"),  dollar=True,  decimals=0)
-    dxy   = fmt("DXY",   tradfi.get("DXY"),   dollar=False, decimals=2)
+    btc   = fmt("BTC",  crypto.get("BTC"),   dollar=True,  decimals=0)
+    eth   = fmt("ETH",  crypto.get("ETH"),   dollar=True,  decimals=0)
+    bnb   = fmt("BNB",  crypto.get("BNB"),   dollar=True,  decimals=1)
+    sp500 = fmt("S&P",  tradfi.get("SP500"), dollar=False, decimals=0)
+    gold  = fmt("Gold", tradfi.get("Gold"),  dollar=True,  decimals=0)
+    dxy   = fmt("DXY",  tradfi.get("DXY"),   dollar=False, decimals=2)
 
-    return f"{btc} | {eth} | {bnb} | {sp500} | {gold} | {dxy}"
+    crypto_row = f"{btc}  ·  {eth}  ·  {bnb}"
+    tradfi_row = f"{sp500}  ·  {gold}  ·  {dxy}"
+    return f"{crypto_row}\n{tradfi_row}"
+
+
+# ── OUTPUT FORMATTERS ────────────────────────────────────────────────────────
+
+# Emoji prefixes that mark section headers in the Groq output
+_SECTION_EMOJIS = ("🌅", "📊", "🌐", "🔭", "🧠", "📚", "📰", "⚠️")
+# Keywords that identify a price data line
+_PRICE_KEYWORDS = ("BTC ", "BTC:", "ETH ", "S&P ", "Gold ", "DXY ")
+
+
+def _esc(s):
+    """Escape HTML special characters for Telegram HTML mode."""
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def format_for_telegram(text):
+    """
+    Post-process the briefing text for Telegram HTML parse mode.
+    - Section emoji headers → bold
+    - Price lines → monospace <code> block
+    - Visual divider inserted between sections
+    """
+    DIVIDER = "──────────────────────"
+    lines = text.split("\n")
+    out = []
+    first_section = True
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Section header: starts with a known emoji and has content after it
+        if any(stripped.startswith(e) for e in _SECTION_EMOJIS) and len(stripped) > 3:
+            if not first_section:
+                out.append(f"\n{DIVIDER}")
+            out.append(f"<b>{_esc(stripped)}</b>")
+            first_section = False
+
+        # Price line: contains price data keywords
+        elif any(kw in line for kw in _PRICE_KEYWORDS):
+            out.append(f"<code>{_esc(stripped)}</code>")
+
+        else:
+            out.append(_esc(line))
+
+    return "\n".join(out)
+
+
+def build_email_html(text, date_str):
+    """
+    Build a dark HTML email with BNB gold accents.
+    Styles: dark background #0d0d0d, gold #F0B90B, monospace font.
+    """
+    lines = text.split("\n")
+    html_parts = []
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            html_parts.append("<div style='height:8px'></div>")
+            continue
+
+        esc = (stripped
+               .replace("&", "&amp;")
+               .replace("<", "&lt;")
+               .replace(">", "&gt;"))
+
+        if any(stripped.startswith(e) for e in _SECTION_EMOJIS) and len(stripped) > 3:
+            html_parts.append(
+                f'<p style="color:#F0B90B;font-weight:bold;font-size:15px;'
+                f'margin:20px 0 6px;border-bottom:1px solid #2a2a2a;padding-bottom:6px">'
+                f'{esc}</p>'
+            )
+        elif any(kw in line for kw in _PRICE_KEYWORDS):
+            html_parts.append(
+                f'<p style="background:#1a1a1a;border-left:3px solid #F0B90B;'
+                f'padding:8px 14px;margin:6px 0;font-family:monospace;'
+                f'font-size:13px;color:#e0e0e0">{esc}</p>'
+            )
+        elif stripped.startswith("- ") or stripped.startswith("• "):
+            html_parts.append(
+                f'<p style="padding-left:12px;margin:4px 0;color:#c0c0c0">{esc}</p>'
+            )
+        else:
+            html_parts.append(f'<p style="margin:5px 0">{esc}</p>')
+
+    body = "\n".join(html_parts)
+
+    return f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="background:#0d0d0d;color:#d4d4d4;font-family:'IBM Plex Mono','Courier New',monospace;
+             font-size:14px;line-height:1.75;padding:32px 24px;max-width:660px;margin:0 auto">
+  <div style="border-bottom:2px solid #F0B90B;padding-bottom:16px;margin-bottom:8px">
+    <span style="color:#F0B90B;font-size:11px;letter-spacing:2px;text-transform:uppercase">
+      Daily Intelligence
+    </span>
+  </div>
+  {body}
+  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #2a2a2a;
+              font-size:11px;color:#444">
+    Generated {date_str} · BNB Chain LatAm Intel
+  </div>
+</body>
+</html>"""
 
 
 # ── RSS FEED SCRAPING ─────────────────────────────────────────────────────────
@@ -330,22 +438,27 @@ def build_fallback_briefing(date_str, price_line, articles):
 
 async def send_telegram(text):
     """
-    Send briefing via Telegram bot.
-    Splits into 2 messages if the text exceeds Telegram's 4096-char limit.
+    Send briefing via Telegram bot using HTML parse mode for rich formatting.
+    Splits into 2 messages if the formatted text exceeds Telegram's 4096-char limit.
     """
     try:
         bot = Bot(token=TELEGRAM_BOT_TOKEN)
+        html = format_for_telegram(text)
 
-        if len(text) > 4096:
-            # Find the last newline before the 4096 limit for a clean split
-            split_at = text.rfind("\n", 0, 4096)
+        if len(html) > 4096:
+            split_at = html.rfind("\n", 0, 4096)
             if split_at == -1:
                 split_at = 4096
-
-            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=text[:split_at])
-            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=text[split_at:].strip())
+            await bot.send_message(
+                chat_id=TELEGRAM_CHAT_ID, text=html[:split_at], parse_mode="HTML"
+            )
+            await bot.send_message(
+                chat_id=TELEGRAM_CHAT_ID, text=html[split_at:].strip(), parse_mode="HTML"
+            )
         else:
-            await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=text)
+            await bot.send_message(
+                chat_id=TELEGRAM_CHAT_ID, text=html, parse_mode="HTML"
+            )
 
         print("✅ Telegram sent")
 
@@ -359,22 +472,25 @@ def send_email(text, date_str):
     """
     Send briefing via Gmail SMTP (port 587, STARTTLS).
     Self-send: from your Gmail to your Gmail.
-    Requires a Gmail App Password — NOT your regular Gmail password.
+    Sends HTML version (dark theme, BNB gold) with plain text fallback.
     """
     try:
         subject = f"🧠 Daily Intel — {date_str}"
 
+        # multipart/alternative: email clients pick the best version they support
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"]    = GMAIL_USER
         msg["To"]      = GMAIL_USER  # self-send
 
-        # Attach plain text body
+        # Plain text fallback (for clients that don't render HTML)
         msg.attach(MIMEText(text, "plain", "utf-8"))
+        # HTML version (richer, styled — preferred by most clients)
+        msg.attach(MIMEText(build_email_html(text, date_str), "html", "utf-8"))
 
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.ehlo()
-            server.starttls()   # Upgrade to TLS
+            server.starttls()
             server.ehlo()
             server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_USER, GMAIL_USER, msg.as_string())
