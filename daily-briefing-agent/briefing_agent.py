@@ -495,7 +495,7 @@ async def send_telegram(text):
     Splits into 2 messages if the formatted text exceeds Telegram's 4096-char limit.
     """
     try:
-        bot = Bot(token=TELEGRAM_BOT_TOKEN)
+        bot = Bot(token=BRIEFING_BOT_TOKEN)
         html = format_for_telegram(text)
 
         if len(html) > 4096:
