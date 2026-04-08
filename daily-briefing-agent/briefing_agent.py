@@ -11,6 +11,7 @@ Run with:  python briefing_agent.py          ← scheduled mode
 """
 
 import os
+import re
 import sys
 import asyncio
 import argparse
@@ -136,6 +137,7 @@ def _fetch_stooq(name):
         "SP500": "%5Espx",   # ^spx  (S&P 500)
         "Gold":  "gc.f",     # Gold futures
         "DXY":   "dx.f",     # DXY (Dollar Index futures)
+        "SPY":   "spy.us",   # SPY ETF
     }
     symbol = stooq_symbols.get(name)
     if not symbol:
@@ -169,6 +171,7 @@ def fetch_tradfi_prices():
         "SP500": "^GSPC",
         "Gold":  "GC=F",
         "DXY":   "DX-Y.NYB",
+        "SPY":   "SPY",
     }
     results = {}
 
@@ -210,37 +213,39 @@ def fetch_tradfi_prices():
 def format_price_line(crypto, tradfi):
     """
     Render two price rows — crypto on top, tradfi below.
-    TradFi always shows previous close with a label since markets are closed at briefing time.
+    Labels are self-explanatory: $ for actual share/coin prices, no $ for indices.
+    TradFi always shows previous close since markets are closed at briefing time.
     """
 
-    def fmt(label, data, dollar=True, decimals=0):
+    def fmt(label, data, dollar=True, decimals=0, suffix=""):
         if not data or data.get("price") is None:
             return f"{label} –"
         price = data["price"]
         fmt_price = (
-            f"${price:,.{decimals}f}" if dollar else f"{price:,.{decimals}f}"
+            f"${price:,.{decimals}f}{suffix}" if dollar else f"{price:,.{decimals}f}{suffix}"
         )
         if data.get("change") is not None:
             arrow = "↑" if data["change"] >= 0 else "↓"
             return f"{label} {fmt_price} {arrow}{abs(data['change']):.1f}%"
         return f"{label} {fmt_price}"
 
-    btc   = fmt("BTC",  crypto.get("BTC"),   dollar=True,  decimals=0)
-    eth   = fmt("ETH",  crypto.get("ETH"),   dollar=True,  decimals=0)
-    bnb   = fmt("BNB",  crypto.get("BNB"),   dollar=True,  decimals=1)
-    sp500 = fmt("S&P",  tradfi.get("SP500"), dollar=False, decimals=0)
-    gold  = fmt("Gold", tradfi.get("Gold"),  dollar=True,  decimals=0)
-    dxy   = fmt("DXY",  tradfi.get("DXY"),   dollar=False, decimals=2)
+    btc   = fmt("BTC",                crypto.get("BTC"),   dollar=True,  decimals=0)
+    eth   = fmt("ETH",                crypto.get("ETH"),   dollar=True,  decimals=0)
+    bnb   = fmt("BNB",                crypto.get("BNB"),   dollar=True,  decimals=1)
+    sp500 = fmt("S&P 500",            tradfi.get("SP500"), dollar=False, decimals=0)
+    spy   = fmt("SPY",                tradfi.get("SPY"),   dollar=True,  decimals=0)
+    gold  = fmt("Gold",               tradfi.get("Gold"),  dollar=True,  decimals=0, suffix="/oz")
+    dxy   = fmt("DXY (USD strength)", tradfi.get("DXY"),   dollar=False, decimals=2)
 
     crypto_row = f"{btc}  ·  {eth}  ·  {bnb}"
 
     all_tradfi_failed = all(
-        tradfi.get(k) is None for k in ("SP500", "Gold", "DXY")
+        tradfi.get(k) is None for k in ("SP500", "SPY", "Gold", "DXY")
     )
     if all_tradfi_failed:
-        tradfi_row = "S&P · Gold · DXY — unavailable"
+        tradfi_row = "S&P 500 · SPY · Gold · DXY — unavailable"
     else:
-        tradfi_row = f"{sp500}  ·  {gold}  ·  {dxy}  (prev. close)"
+        tradfi_row = f"{sp500}  ·  {spy}  ·  {gold}  ·  {dxy}  (prev. close)"
 
     return f"{crypto_row}\n{tradfi_row}"
 
@@ -248,46 +253,119 @@ def format_price_line(crypto, tradfi):
 # ── OUTPUT FORMATTERS ────────────────────────────────────────────────────────
 
 # Emoji prefixes that mark section headers in the Groq output
-_SECTION_EMOJIS = ("🌅", "📊", "🌐", "🔭", "🧠", "📚", "📰", "⚠️")
-# Keywords that identify a price data line
-_PRICE_KEYWORDS = ("BTC ", "BTC:", "ETH ", "S&P ", "Gold ", "DXY ")
+_SECTION_EMOJIS = ("🌅", "📊", "🌐", "🤖", "🔭", "🧠", "📚", "📰", "⚠️")
+# Keywords that identify a price data line (used by build_email_html)
+_PRICE_KEYWORDS = ("BTC ", "BTC:", "ETH ", "S&P ", "SPY ", "Gold ", "DXY ")
 
 
-def _esc(s):
-    """Escape HTML special characters for Telegram HTML mode."""
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+def _mdv2_esc(s):
+    """Escape all MarkdownV2 special characters (char-by-char to avoid double-escaping)."""
+    special = set(r'\_*[]()~`>#+-=|{}.!')
+    return "".join(f"\\{c}" if c in special else c for c in s)
+
+
+def _url_esc(url):
+    """Escape a URL for use inside Telegram MarkdownV2 link parentheses."""
+    return url.replace("\\", "\\\\").replace(")", "\\)")
 
 
 def format_for_telegram(text):
     """
-    Post-process the briefing text for Telegram HTML parse mode.
-    - Section emoji headers → bold
-    - Price lines → monospace <code> block
-    - Visual divider inserted between sections
+    Post-process the briefing text for Telegram MarkdownV2 parse mode.
+    - Section headers → *bold*, with ────── divider before each (except first)
+    - Bullets (- prefix) → · with blank line between each bullet
+    - IDEA OF THE DAY body → _italic_, statements only
+    - WORTH READING → *Why read it:* sentence + clickable [url](url) link
+    - Trims to 3800 chars preserving complete sections
     """
     DIVIDER = "──────────────────────"
+
     lines = text.split("\n")
     out = []
     first_section = True
+    current_section = None
+    prev_was_bullet = False
 
     for line in lines:
         stripped = line.strip()
 
-        # Section header: starts with a known emoji and has content after it
-        if any(stripped.startswith(e) for e in _SECTION_EMOJIS) and len(stripped) > 3:
-            if not first_section:
-                out.append(f"\n{DIVIDER}")
-            out.append(f"<b>{_esc(stripped)}</b>")
-            first_section = False
+        # Skip blank lines — spacing is managed explicitly
+        if not stripped:
+            continue
 
-        # Price line: contains price data keywords
-        elif any(kw in line for kw in _PRICE_KEYWORDS):
-            out.append(f"<code>{_esc(stripped)}</code>")
+        # Detect section header
+        is_header = (
+            any(stripped.startswith(e) for e in _SECTION_EMOJIS)
+            and len(stripped) > 3
+        )
+
+        if is_header:
+            if not first_section:
+                out.append("")
+                out.append(DIVIDER)   # ─── chars are not MarkdownV2-special
+                out.append("")
+            out.append(f"*{_mdv2_esc(stripped)}*")
+            out.append("")
+            first_section = False
+            prev_was_bullet = False
+
+            if "🧠" in stripped:
+                current_section = "idea"
+            elif "📚" in stripped:
+                current_section = "reading"
+            elif "📊" in stripped:
+                current_section = "markets"
+            else:
+                current_section = "other"
+
+        elif stripped.startswith("- ") or stripped.startswith("· "):
+            content = stripped[2:].strip()
+            if prev_was_bullet:
+                out.append("")  # blank line between bullets
+            out.append(f"· {_mdv2_esc(content)}")
+            prev_was_bullet = True
+
+        elif current_section == "idea":
+            out.append(f"_{_mdv2_esc(stripped)}_")
+            prev_was_bullet = False
+
+        elif current_section == "reading":
+            if stripped.lower().startswith("why read it"):
+                rest = stripped[len("why read it"):].lstrip(":").strip()
+                out.append(
+                    f"*Why read it:* {_mdv2_esc(rest)}" if rest else "*Why read it:*"
+                )
+            elif stripped.startswith("http"):
+                out.append(f"[{_mdv2_esc(stripped)}]({_url_esc(stripped)})")
+            else:
+                url_match = re.search(r'https?://\S+', stripped)
+                if url_match:
+                    url = url_match.group()
+                    sentence = stripped[:url_match.start()].strip()
+                    if sentence:
+                        out.append(f"*Why read it:* {_mdv2_esc(sentence)}")
+                    out.append(f"[{_mdv2_esc(url)}]({_url_esc(url)})")
+                else:
+                    out.append(f"*Why read it:* {_mdv2_esc(stripped)}")
+            prev_was_bullet = False
 
         else:
-            out.append(_esc(line))
+            out.append(_mdv2_esc(stripped))
+            prev_was_bullet = False
 
-    return "\n".join(out)
+    result = "\n".join(out)
+
+    # Trim to 3800 chars if needed — cut at a section boundary when possible
+    if len(result) > 3800:
+        trim_at = result.rfind("\n" + DIVIDER, 0, 3700)
+        if trim_at > 0:
+            result = result[:trim_at].strip()
+        else:
+            trim_at = result.rfind("\n", 0, 3700)
+            result = result[:trim_at].strip()
+        result += f"\n\n_{_mdv2_esc('Trimmed to fit Telegram limit')}_"
+
+    return result
 
 
 def build_email_html(text, date_str):
@@ -454,10 +532,11 @@ Produce the daily briefing in EXACTLY this format (no extra sections, no preambl
 - [1-2 signals from macro/political/finance sources. LatAm exposure or dollar dynamics preferred.]
 
 🧠 IDEA OF THE DAY
-[One provocation. Connects today's signal to a bigger pattern. Challenges an assumption. Deutsch meets Taleb meets Naval. Not a task. Not generic. Max 3 sentences.]
+[One provocation. Connects today's signal to a bigger pattern. Challenges an assumption. Deutsch meets Taleb meets Naval. Not a task. Not generic. Statements only — no questions. Max 3 sentences.]
 
 📚 WORTH READING
-[1 real article link from the sources above + one sentence on why THIS person specifically should read it]
+Why read it: [one sentence on why THIS person specifically should read it]
+[full URL on its own line — no anchor text]
 
 Keep it under 550 words. Be an analyst, not a summarizer. Connect dots."""
 
@@ -511,29 +590,16 @@ def build_fallback_briefing(date_str, price_line, articles):
 
 async def send_telegram(text):
     """
-    Send briefing via Telegram bot using HTML parse mode for rich formatting.
-    Splits into 2 messages if the formatted text exceeds Telegram's 4096-char limit.
+    Send briefing via Telegram bot using MarkdownV2 parse mode.
+    format_for_telegram() guarantees output ≤ 3800 chars — always fits in one message.
     """
     try:
         bot = Bot(token=BRIEFING_BOT_TOKEN)
-        html = format_for_telegram(text)
-
-        if len(html) > 4096:
-            split_at = html.rfind("\n", 0, 4096)
-            if split_at == -1:
-                split_at = 4096
-            await bot.send_message(
-                chat_id=TELEGRAM_CHAT_ID, text=html[:split_at], parse_mode="HTML"
-            )
-            await bot.send_message(
-                chat_id=TELEGRAM_CHAT_ID, text=html[split_at:].strip(), parse_mode="HTML"
-            )
-        else:
-            await bot.send_message(
-                chat_id=TELEGRAM_CHAT_ID, text=html, parse_mode="HTML"
-            )
-
-        print("✅ Telegram sent")
+        md = format_for_telegram(text)
+        await bot.send_message(
+            chat_id=TELEGRAM_CHAT_ID, text=md, parse_mode="MarkdownV2"
+        )
+        print(f"✅ Telegram sent ({len(md)} chars)")
 
     except Exception as e:
         print(f"❌ Telegram failed: {e}")
