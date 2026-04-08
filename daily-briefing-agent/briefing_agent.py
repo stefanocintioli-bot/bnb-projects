@@ -30,7 +30,7 @@ from telegram import Bot
 # ── SECRETS ──────────────────────────────────────────────────────────────────
 # All loaded from environment variables — never hardcode these.
 GROQ_API_KEY       = os.environ.get("GROQ_API_KEY")
-BRIEFING_BOT_TOKEN = os.environ.get("BRIEFING_BOT_TOKEN")
+BRIEFING_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID")
 GMAIL_USER         = os.environ.get("GMAIL_USER")
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_APP_PASSWORD")
