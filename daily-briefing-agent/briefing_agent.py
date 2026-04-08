@@ -52,6 +52,8 @@ RSS_SOURCES = [
     # Technology + AI
     "https://www.ben-evans.com/benedictevans/rss.xml",
     "https://jack-clark.net/feed/",
+    "https://feeds.feedburner.com/venturebeat/SZYF",   # VentureBeat AI
+    "https://www.artificialintelligence-news.com/feed/",  # AI News
     # LatAm
     "https://www.americasquarterly.org/feed/",
     "https://www.criptonoticias.com/feed/",
@@ -60,20 +62,28 @@ RSS_SOURCES = [
 
 # ── ANALYST IDENTITY (baked into every Groq call) ────────────────────────────
 ANALYST_SYSTEM_PROMPT = """You are a personal intelligence analyst for Stefano, LatAm Community Manager at BNB Chain.
-Your job is to produce a daily briefing that makes him sharper in three areas:
-1. His ecosystem work (BNB Chain, Web3, LatAm crypto)
-2. His macro understanding (global markets, political economy, dollar dynamics in LatAm)
-3. His long-term thinking (technology trends, AI, ideas worth sitting with)
 
-You are NOT a news summarizer. You are an analyst. Connect dots. Flag what's relevant to LatAm specifically.
-Be direct, precise, and brief. Max 5 minutes to read. No filler. No hype.
+WHO HE IS:
+- Builds at the intersection of Web3, LatAm, and AI. Owns the LatAm region for BNB Chain.
+- Thinks in fundamentals, not hype. Filters noise aggressively.
+- Mental models he actually uses: ownership of outcomes (Adler/Stoicism), rational optimism (progress through technology), work smart before work hard, peace of mind as the north star.
+- Reads: Naval, Deutsch (Beginning of Infinity), Never Split the Difference, Daily Stoic. Follows on-chain/liquidity analysis, Jose Luis Cava for macro, technical analysis for crypto positioning.
+- On AI: early adopter, uses Claude Code and AI tools daily, but calibrated — knows what's still green (e.g. delegating wallets with real money). Tracks big tech moves and the people who actually shape systems, not conspiracy, fundamentals.
+- Filters out: generic Claude Code tutorials, ChatGPT takes, content that could apply to anyone.
 
-RULES — follow these without exception:
-1. Never write generic recommendations ("X should focus on Y", "builders should consider Z").
-   Only write specific observations and their concrete implications. If it could apply to anyone, cut it.
-2. The IDEA OF THE DAY must never be a work task or productivity tip.
-   It must be a geopolitical, philosophical, or strategic observation that connects something in today's
-   news to a bigger pattern. One sharp question or provocation. Max 3 sentences."""
+YOUR JOB:
+Produce a daily briefing that makes him sharper in four areas:
+1. BNB Chain ecosystem and his LatAm ownership of it
+2. Macro and political economy — especially dollar dynamics and LatAm exposure
+3. AI signal that matters: on-chain AI, big tech moves, tools worth adopting, what's still too early
+4. Long-term thinking — ideas worth sitting with, patterns connecting today's news to bigger forces
+
+You are NOT a news summarizer. You are an analyst. Connect dots. Be direct, precise, brief. Max 5 minutes to read. No filler. No hype.
+
+RULES — no exceptions:
+1. Never write generic recommendations. Only specific observations with concrete implications. If it could apply to anyone, cut it.
+2. IDEA OF THE DAY: never a work task or productivity tip. Must be a geopolitical, philosophical, or strategic provocation — something that connects today's signal to a bigger pattern. Challenge his assumptions. One sharp question or reframe. Max 3 sentences. Think Deutsch meets Taleb meets Naval.
+3. AI section: no tutorials, no "AI is changing everything" takes. Only signals with real implications — a move by a lab, a capability crossing a threshold, a use case that actually changes leverage for someone like him."""
 
 
 # ── PRICE FETCHING ────────────────────────────────────────────────────────────
@@ -150,9 +160,10 @@ def _fetch_stooq(name):
 
 def fetch_tradfi_prices():
     """
-    Fetch S&P 500, Gold, DXY. Tries yfinance first; falls back to stooq.com.
-    Both are free with no API key required.
-    Returns dict with price + change per asset, or None if both sources fail.
+    Fetch S&P 500, Gold, DXY — previous close prices.
+    At 7AM Argentina time, US markets are closed, so we fetch the last available close.
+    On weekends, this returns Friday's close.
+    Tries yfinance first; falls back to stooq.com.
     """
     yf_symbols = {
         "SP500": "^GSPC",
@@ -164,35 +175,42 @@ def fetch_tradfi_prices():
     for name, symbol in yf_symbols.items():
         data = None
 
-        # Primary: yfinance
+        # Primary: yfinance — fetch 5 days to ensure we get at least 2 closes
         try:
-            hist = yf.Ticker(symbol).history(period="5d")
+            ticker = yf.Ticker(symbol)
+            hist = ticker.history(period="5d")
+            # Drop rows where Close is NaN or zero
+            hist = hist[hist["Close"] > 0].dropna(subset=["Close"])
             if len(hist) >= 2:
                 current  = float(hist["Close"].iloc[-1])
                 previous = float(hist["Close"].iloc[-2])
-                data = {"price": current, "change": ((current - previous) / previous) * 100}
+                data = {
+                    "price":  current,
+                    "change": ((current - previous) / previous) * 100,
+                }
             elif len(hist) == 1:
                 data = {"price": float(hist["Close"].iloc[-1]), "change": None}
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"   {name}: yfinance error — {e}")
 
         # Fallback: stooq.com
         if data is None:
             data = _fetch_stooq(name)
             if data:
                 print(f"   {name}: yfinance failed, stooq fallback used")
+            else:
+                print(f"   {name}: both sources failed")
 
         results[name] = data
 
-    print("✅ TradFi prices fetched")
+    print("✅ TradFi prices fetched (previous close)")
     return results
 
 
 def format_price_line(crypto, tradfi):
     """
     Render two price rows — crypto on top, tradfi below.
-    Uses ↑/↓ arrows and dot separators for cleaner readability.
-    Returns a single string with a newline between the two rows.
+    TradFi always shows previous close with a label since markets are closed at briefing time.
     """
 
     def fmt(label, data, dollar=True, decimals=0):
@@ -216,15 +234,13 @@ def format_price_line(crypto, tradfi):
 
     crypto_row = f"{btc}  ·  {eth}  ·  {bnb}"
 
-    # If all three tradfi sources failed (both yfinance + stooq), markets are likely closed
     all_tradfi_failed = all(
         tradfi.get(k) is None for k in ("SP500", "Gold", "DXY")
     )
-    tradfi_row = (
-        "S&P · Gold · DXY — markets closed"
-        if all_tradfi_failed
-        else f"{sp500}  ·  {gold}  ·  {dxy}"
-    )
+    if all_tradfi_failed:
+        tradfi_row = "S&P · Gold · DXY — unavailable"
+    else:
+        tradfi_row = f"{sp500}  ·  {gold}  ·  {dxy}  (prev. close)"
 
     return f"{crypto_row}\n{tradfi_row}"
 
@@ -423,23 +439,27 @@ Produce the daily briefing in EXACTLY this format (no extra sections, no preambl
 
 📊 MARKETS
 {price_line}
-[2 sentences: what does this combination tell us today, especially for LatAm?]
+[2 sentences: what does this combination of crypto momentum and tradfi close tell us today? LatAm angle if relevant.]
 
 🌐 ECOSYSTEM (BNB Chain + Web3)
-- [Signal 1: one line, what it means for Stefano's work]
+- [Signal 1: specific, one line, concrete implication for Stefano's work]
 - [Signal 2]
 - [Signal 3 max]
 
+🤖 AI SIGNAL
+- [Signal 1: a real move — lab, capability, use case, or big tech decision. No tutorials. Implication only.]
+- [Signal 2 max]
+
 🔭 MACRO + WORLD
-- [1-2 signals from macro/political/finance sources relevant to LatAm or Web3]
+- [1-2 signals from macro/political/finance sources. LatAm exposure or dollar dynamics preferred.]
 
 🧠 IDEA OF THE DAY
-[One concept, trend, or question worth thinking about this week. Not news. A thinking prompt. Calibrated to someone building at the intersection of Web3, LatAm, and AI.]
+[One provocation. Connects today's signal to a bigger pattern. Challenges an assumption. Deutsch meets Taleb meets Naval. Not a task. Not generic. Max 3 sentences.]
 
 📚 WORTH READING
-[1 article link from the sources above, with one sentence on why THIS person should read it]
+[1 real article link from the sources above + one sentence on why THIS person specifically should read it]
 
-Keep it under 500 words. Be an analyst, not a summarizer. Connect dots."""
+Keep it under 550 words. Be an analyst, not a summarizer. Connect dots."""
 
 
 def call_groq(price_line, articles, date_str):
