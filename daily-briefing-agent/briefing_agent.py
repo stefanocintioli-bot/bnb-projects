@@ -28,6 +28,17 @@ from groq import Groq
 from telegram import Bot
 
 
+# ── REFERENCE LOADER ─────────────────────────────────────────────────────────
+
+def load_references():
+    base = os.path.dirname(os.path.abspath(__file__))
+    role = open(os.path.join(base, 'references/role-context.md')).read()
+    prompt = open(os.path.join(base, 'references/analyst-prompt.md')).read()
+    learnings_path = os.path.join(base, 'Learnings.md')
+    learnings = open(learnings_path).read() if os.path.exists(learnings_path) else ""
+    return role, prompt, learnings, learnings_path
+
+
 # ── SECRETS ──────────────────────────────────────────────────────────────────
 # All loaded from environment variables — never hardcode these.
 GROQ_API_KEY       = os.environ.get("GROQ_API_KEY")
@@ -58,6 +69,9 @@ RSS_SOURCES = [
     # LatAm
     "https://www.americasquarterly.org/feed/",
     "https://www.criptonoticias.com/feed/",
+    # Additional
+    "https://www.bnbchain.org/en/blog/rss.xml",
+    "https://www.coindesk.com/arc/outboundfeeds/rss/",
 ]
 
 
@@ -541,7 +555,7 @@ Why read it: [one sentence on why THIS person specifically should read it]
 Keep it under 550 words. Be an analyst, not a summarizer. Connect dots."""
 
 
-def call_groq(price_line, articles, date_str):
+def call_groq(price_line, articles, date_str, system_prompt=None, tradfi=None):
     """
     Send market data + articles to Groq (llama3-70b-8192).
     Returns the briefing string, or None if Groq fails.
@@ -550,10 +564,19 @@ def call_groq(price_line, articles, date_str):
         client = Groq(api_key=GROQ_API_KEY)
         prompt = build_user_prompt(date_str, price_line, articles)
 
+        sp500_data = (tradfi or {}).get("SP500")
+        gold_data  = (tradfi or {}).get("Gold")
+        dxy_data   = (tradfi or {}).get("DXY")
+        sp500_value = f"{sp500_data['price']:.0f} ({sp500_data['change']:+.1f}%)" if sp500_data else "unavailable"
+        gold_value  = f"{gold_data['price']:.0f}"  if gold_data  else "unavailable"
+        dxy_value   = f"{dxy_data['price']:.2f}"   if dxy_data   else "unavailable"
+        tradfi_note = f"\n\nTRADFI DATA (always include in MARKETS section of output): S&P={sp500_value} Gold={gold_value} DXY={dxy_value}"
+        prompt = prompt + tradfi_note
+
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": ANALYST_SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt or ANALYST_SYSTEM_PROMPT},
                 {"role": "user",   "content": prompt},
             ],
             max_tokens=1200,
@@ -645,6 +668,9 @@ def send_email(text, date_str):
 async def run():
     """Orchestrates the full briefing pipeline end to end."""
 
+    role_context, analyst_prompt, learnings, learnings_path = load_references()
+    dynamic_system_prompt = f"{analyst_prompt}\n\n## YOUR ROLE CONTEXT\n{role_context}\n\n## PAST LEARNINGS\n{learnings}"
+
     now_ar   = datetime.now(ARGENTINA_TZ)
     date_str = now_ar.strftime("%A, %B %d %Y")  # e.g. "Monday, April 07 2026"
 
@@ -661,7 +687,7 @@ async def run():
     articles = fetch_rss_articles()
 
     # Step 3 — Ask Groq for analyst synthesis
-    briefing = call_groq(price_line, articles, date_str)
+    briefing = call_groq(price_line, articles, date_str, system_prompt=dynamic_system_prompt, tradfi=tradfi)
 
     # Step 4 — Fall back to raw data if Groq failed
     if not briefing:
@@ -673,6 +699,11 @@ async def run():
 
     # Step 6 — Deliver via Email
     send_email(briefing, date_str)
+
+    # Step 7 — Update Learnings.md
+    learnings_entry = f"\n[{datetime.now(ARGENTINA_TZ).date()}] | Briefing sent successfully | Review manually if output quality degrades"
+    with open(learnings_path, 'a') as f:
+        f.write(learnings_entry)
 
     print("=" * 60)
     print("✅ Briefing complete\n")
